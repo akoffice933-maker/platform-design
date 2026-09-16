@@ -1,0 +1,35 @@
+@import './styles/tokens.css';
+@import './styles/motion.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { -webkit-font-smoothing: antialiased; }
+body { @apply bg-bg-secondary text-ink font-sans; }
+
+/* тонкий скроллбар в духе системы */
+* { scrollbar-width: thin; scrollbar-color: #CBD5E1 transparent; }
+
+@layer components {
+  .pui-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold select-none
+           transition-colors duration-fast ease-platform-out
+           disabled:opacity-45 disabled:cursor-not-allowed;
+  }
+  .pui-btn:active:not(:disabled) { transform: scale(0.97); }
+  .pui-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-border-focus); }
+  .pui-btn.sm { @apply h-8 px-3 text-[13px]; }
+  .pui-btn.md { @apply h-10 px-4 text-body-sm; }
+  .pui-btn.lg { @apply h-12 px-6 text-body; }
+  .pui-btn.primary { @apply bg-accent text-white hover:bg-accent-hover; }
+  .pui-btn.secondary { @apply bg-bg-primary text-ink border border-line hover:bg-bg-tertiary; }
+  .pui-btn.ghost { @apply bg-transparent text-accent hover:bg-bg-tertiary; }
+  .pui-btn.danger { @apply bg-err text-white hover:brightness-95; }
+
+  .pui-input {
+    @apply h-10 px-3 rounded-xl border border-line bg-bg-primary text-body-sm text-ink outline-none
+           transition-colors duration-fast ease-platform-out placeholder:text-ink-3 focus:border-line-focus;
+  }
+  .pui-input.error { @apply border-err; }
+}
