@@ -28,7 +28,7 @@ export default function Scenarios() {
   const [dif, setDif] = useState(2);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
-  const [customs, setCustoms] = useState(api.getCustomScenarios());
+  const [customs, setCustoms] = useState(() => api.getCustomScenarios() ?? []);
   const m = SCENARIO.meta;
   const match = (t: string) => t.toLowerCase().includes(q.toLowerCase());
 
@@ -37,7 +37,7 @@ export default function Scenarios() {
     setNote('Генерирую сценарий… (ИИ: до минуты, шаблон: мгновенно)');
     const r = await generateScenario({ topic: topic.trim() || IDEAS[0], focus: [focus], difficulty: dif });
     api.saveCustomScenario(r.scenario);
-    setCustoms(api.getCustomScenarios());
+    setCustoms(api.getCustomScenarios() ?? []);
     setNote(r.note ?? '');
     nav('/app/session/' + r.scenario.id);
     setBusy(false);
@@ -98,7 +98,7 @@ export default function Scenarios() {
                 </div>
                 <div className="flex gap-2 mt-4">
                   <Link to={`/app/session/${c.id}`} className="grow"><Btn full>▶ Запустить</Btn></Link>
-                  <Btn variant="ghost" onClick={() => { api.deleteCustomScenario(c.id); setCustoms(api.getCustomScenarios()); }} title="Удалить">✕</Btn>
+                  <Btn variant="ghost" onClick={() => { api.deleteCustomScenario(c.id); setCustoms(api.getCustomScenarios() ?? []); }} title="Удалить">✕</Btn>
                 </div>
               </Card>
             ))}

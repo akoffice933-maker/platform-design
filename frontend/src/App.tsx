@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
 import Shell from './components/Shell';
 import Landing from './pages/Landing';
 import { Login, Register } from './pages/Auth';
@@ -18,6 +19,7 @@ import States from './pages/States';
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
@@ -51,5 +53,6 @@ export default function App() {
       <Route path="/states" element={<States />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </ErrorBoundary>
   );
 }

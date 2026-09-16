@@ -73,7 +73,12 @@ function seed(): DB {
 function read(): DB {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw) as DB;
+    if (raw) {
+      // миграция: старые базы (до добавления новых полей) дополняем дефолтами seed()
+      const stored = JSON.parse(raw) as Partial<DB>;
+      const def = seed();
+      return { ...def, ...stored, customScenarios: stored.customScenarios ?? [] };
+    }
   } catch { /* перезапишем */ }
   const db = seed();
   write(db);
