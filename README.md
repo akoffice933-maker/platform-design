@@ -10,7 +10,8 @@
 
 1. Включите GitHub Pages: **Settings → Pages → Branch `main` / `(root)` → Save**.
 2. URL манифеста плагина:
-   `https://<ВАШ_ЛОГИН>.github.io/<ИМЯ_РЕПО>/penpot-plugin/manifest.json`
+   `https://akoffice933-maker.github.io/platform-design/penpot-plugin/manifest.json`
+   (короткая форма того же плагина: `https://akoffice933-maker.github.io/platform-design/manifest.json` — ставьте один из двух)
 3. Penpot → меню → **Plugins → Plugin manager** (`Ctrl/Cmd + Alt + P`) → вставьте URL → **Install**.
 4. Откройте файл проекта → чистую страницу → **Plugins → Platform Builder → Run**.
 

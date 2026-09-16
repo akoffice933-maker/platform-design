@@ -1,0 +1,13 @@
+{
+  "name": "Platform Builder",
+  "description": "Сборка дизайна по ТЗ v1.0 + P1: стили (33 цвета + 10 текстов), борды Foundations/UI-kit/Domain (106 компонентов), фреймы E-01…E-85 + offline E-53o (151 борд), борд Handoff, 6 кликабельных потоков, борд самодиагностики. Идемпотентен: можно запускать повторно.",
+  "version": 2,
+  "code": "penpot-plugin/plugin.js",
+  "icon": "penpot-plugin/icon.svg",
+  "permissions": [
+    "content:read",
+    "content:write",
+    "library:read",
+    "library:write"
+  ]
+}
