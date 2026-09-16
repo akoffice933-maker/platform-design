@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akoffice933-maker.github.io/platform-design/schemas/scenario.schema.json",
+  "title": "Platform Scenario Graph",
+  "description": "Контракт сценария симулятора (ТЗ 5.3, 12.4): узлы диалога, ветвления, эмоции клиента, оценка по 8 навыкам. Источник UI-паттернов: screens/05 (E-20…E-28), E-85.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "meta", "graph"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "meta": {
+      "type": "object",
+      "required": ["title", "clientRole", "difficulty", "durationMin", "focusSkills"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "minLength": 3, "maxLength": 48 },
+        "description": { "type": "string", "maxLength": 120 },
+        "clientRole": { "type": "string", "minLength": 2, "maxLength": 20 },
+        "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "durationMin": { "type": "integer", "minimum": 5, "maximum": 60 },
+        "focusSkills": { "$ref": "#/$defs/skillList" },
+        "language": { "type": "string", "default": "ru" }
+      }
+    },
+    "graph": {
+      "type": "object",
+      "required": ["start", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "$ref": "#/$defs/nodeId" },
+        "nodes": {
+          "type": "object",
+          "minProperties": 3,
+          "additionalProperties": { "$ref": "#/$defs/node" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nodeId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_]*$" },
+    "skillId": {
+      "type": "string",
+      "enum": ["listening", "empathy", "boundaries", "structuring", "emotion_work", "resistance", "questioning", "reflection"]
+    },
+    "skillList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/skillId" }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "propertyNames": { "$ref": "#/$defs/skillId" },
+      "additionalProperties": { "type": "integer", "minimum": -3, "maximum": 3 }
+    },
+    "emotion": {
+      "type": "object",
+      "required": ["value", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "label": { "type": "string", "maxLength": 32 }
+      }
+    },
+    "feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "strength": { "type": "string", "maxLength": 90 },
+        "growth": { "type": "string", "maxLength": 90 }
+      }
+    },
+    "optionRef": {
+      "description": "Ссылка на вариант ответа в формате '<nodeId>.<optionId>'",
+      "type": "string",
+      "pattern": "^[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "option": {
+      "type": "object",
+      "required": ["id", "text", "emotionAfter", "next"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/nodeId" },
+        "text": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "scores": { "$ref": "#/$defs/scores" },
+        "feedback": { "$ref": "#/$defs/feedback" },
+        "emotionAfter": { "$ref": "#/$defs/emotion" },
+        "next": { "$ref": "#/$defs/nodeId" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["type"],
+      "oneOf": [
+        {
+          "title": "card",
+          "description": "Контекстная карточка (брифинг о клиенте) — показывается до диалога",
+          "properties": {
+            "type": { "const": "card" },
+            "title": { "type": "string", "maxLength": 48 },
+            "body": { "type": "string", "maxLength": 200 },
+            "next": { "$ref": "#/$defs/nodeId" }
+          },
+          "required": ["type", "title", "body", "next"],
+          "additionalProperties": false
+        },
+        {
+          "title": "text",
+          "description": "Реплика клиента (монолог) — E-22 пузырь слева",
+          "properties": {
+            "type": { "const": "text" },
+            "clientLine": { "type": "string", "minLength": 4, "maxLength": 90 },
+            "emotionAfter": { "$ref": "#/$defs/emotion" },
+            "next": { "$ref": "#/$defs/nodeId" }
+          },
+          "required": ["type", "clientLine", "emotionAfter", "next"],
+          "additionalProperties": false
+        },
+        {
+          "title": "choice",
+          "description": "Клиент сказал фразу, психолог выбирает ответ — E-22 варианты. Ветвление: у каждого варианта свой next",
+          "properties": {
+            "type": { "const": "choice" },
+            "clientLine": { "type": "string", "minLength": 4, "maxLength": 90 },
+            "emotionAfter": { "$ref": "#/$defs/emotion" },
+            "options": { "type": "array", "minItems": 2, "maxItems": 5, "items": { "$ref": "#/$defs/option" } }
+          },
+          "required": ["type", "clientLine", "emotionAfter", "options"],
+          "additionalProperties": false
+        },
+        {
+          "title": "scale",
+          "description": "Клиент оценивает состояние 0–10 — E-42/scale-паттерн",
+          "properties": {
+            "type": { "const": "scale" },
+            "prompt": { "type": "string", "maxLength": 60 },
+            "selfRate": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "emotionAfter": { "$ref": "#/$defs/emotion" },
+            "next": { "$ref": "#/$defs/nodeId" }
+          },
+          "required": ["type", "prompt", "selfRate", "emotionAfter", "next"],
+          "additionalProperties": false
+        },
+        {
+          "title": "timer",
+          "description": "Пауза/заземление с таймером — E-24, E-42/timer",
+          "properties": {
+            "type": { "const": "timer" },
+            "prompt": { "type": "string", "maxLength": 60 },
+            "seconds": { "type": "integer", "minimum": 1, "maximum": 300 },
+            "emotionAfter": { "$ref": "#/$defs/emotion" },
+            "next": { "$ref": "#/$defs/nodeId" }
+          },
+          "required": ["type", "prompt", "seconds", "emotionAfter", "next"],
+          "additionalProperties": false
+        },
+        {
+          "title": "input",
+          "description": "Свободный ответ психолога — E-23. Оценка на уровне узла",
+          "properties": {
+            "type": { "const": "input" },
+            "prompt": { "type": "string", "maxLength": 60 },
+            "hints": { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 40 } },
+            "maxLen": { "type": "integer", "default": 500, "maximum": 500 },
+            "scores": { "$ref": "#/$defs/scores" },
+            "feedback": { "$ref": "#/$defs/feedback" },
+            "emotionAfter": { "$ref": "#/$defs/emotion" },
+            "next": { "$ref": "#/$defs/nodeId" }
+          },
+          "required": ["type", "prompt", "emotionAfter", "next"],
+          "additionalProperties": false
+        },
+        {
+          "title": "critical",
+          "description": "Критический эпизод — триггер E-85: пауза симуляции, рекомендации, эскалация",
+          "properties": {
+            "type": { "const": "critical" },
+            "clientLine": { "type": "string", "minLength": 4, "maxLength": 90 },
+            "risk": { "enum": ["elevated", "high"] },
+            "recommendations": {
+              "type": "array", "minItems": 2, "maxItems": 4,
+              "items": { "type": "string", "maxLength": 60 }
+            },
+            "options": { "type": "array", "minItems": 2, "maxItems": 4, "items": { "$ref": "#/$defs/option" } }
+          },
+          "required": ["type", "clientLine", "risk", "recommendations", "options"],
+          "additionalProperties": false
+        },
+        {
+          "title": "branch",
+          "description": "Условное ветвление по состоянию (ТЗ 12.4). Первое истинное условие — then, иначе — else",
+          "properties": {
+            "type": { "const": "branch" },
+            "branches": {
+              "type": "array", "minItems": 1, "maxItems": 4,
+              "items": {
+                "type": "object",
+                "required": ["when", "then"],
+                "additionalProperties": false,
+                "properties": {
+                  "when": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": false,
+                    "properties": {
+                      "emotionAtLeast": { "type": "integer", "minimum": 0, "maximum": 10 },
+                      "optionSelected": { "$ref": "#/$defs/optionRef" },
+                      "skillTotalAtLeast": { "type": "integer", "minimum": -30, "maximum": 30 }
+                    }
+                  },
+                  "then": { "$ref": "#/$defs/nodeId" }
+                }
+              }
+            },
+            "else": { "$ref": "#/$defs/nodeId" }
+          },
+          "required": ["type", "branches", "else"],
+          "additionalProperties": false
+        },
+        {
+          "title": "end",
+          "description": "Завершение сессии → данные для E-25 (разбор)",
+          "properties": {
+            "type": { "const": "end" },
+            "outcome": {
+              "type": "object",
+              "required": ["summary", "completed"],
+              "additionalProperties": false,
+              "properties": {
+                "summary": { "type": "string", "maxLength": 200 },
+                "debrief": { "type": "string", "maxLength": 160 },
+                "completed": { "type": "boolean" }
+              }
+            }
+          },
+          "required": ["type", "outcome"],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}
