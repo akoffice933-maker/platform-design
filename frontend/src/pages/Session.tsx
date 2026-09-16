@@ -5,7 +5,7 @@ import type { RunState, SNode, Option, Emotion } from '../lib/engine';
 import { api } from '../lib/api';
 import { skillLabel } from '../lib/skills';
 import { Btn, Card, Chip, DiffDots, EmotionBar, Input, Textarea } from '../components/ui';
-import { aiConfig, setAiConfig, hasKey, judgeInput, rephraseClientLine, FREE_MODELS } from '../lib/ai';
+import { aiConfig, setAiConfig, hasKey, judgeInput, rephraseClientLine, FREE_MODELS, setRuntimeConfig, testKey } from '../lib/ai';
 import type { AiConfig } from '../lib/ai';
 
 function Bubble({ children, me }: { children: React.ReactNode; me?: boolean }) {
@@ -31,8 +31,11 @@ export default function Session() {
   const [judging, setJudging] = useState(false);
   const [aiLine, setAiLine] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
+  const [aiNote, setAiNote] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [lastSource, setLastSource] = useState<{ source: 'ai' | 'fallback'; model?: string; ms?: number } | null>(null);
   const brief = sc.graph.nodes[sc.graph.start].type === 'card' ? (sc.graph.nodes[sc.graph.start] as { body: string }).body : '';
-  const setAi = (patch: Partial<AiConfig>) => { const c = { ...aiCfg, ...patch }; setAiState(c); setAiConfig(c); };
+  const setAi = (patch: Partial<AiConfig>) => { const c = { ...aiCfg, ...patch }; setAiState(c); setAiConfig(c); setRuntimeConfig(c); };
   const savedRef = useRef(false);
   const node: SNode = nodeOf(run, sc);
   const last = run.steps[run.steps.length - 1];
@@ -66,6 +69,9 @@ export default function Session() {
     if (aiCfg.judge && hasKey(aiCfg)) {
       setJudging(true);
       const v = await judgeInput({ hints: nd.hints, text, nodeScores: nd.scores, emotionLabel: run.emotion.label });
+      setLastSource({ source: v.source, model: v.model, ms: v.ms });
+      if (v.note) setAiNote('⚠ ' + v.note);
+      else if (v.source === 'ai') setAiNote('✓ Оценка ИИ · ' + (v.model ?? '') + ' · ' + Math.round((v.ms ?? 0) / 100) / 10 + ' c');
       setRun(advance(run, { text, scores: v.scores, feedback: v.feedback, feedbackKind: v.kind }, sc));
       setJudging(false);
       return;
@@ -119,7 +125,14 @@ export default function Session() {
 
           {node.type === 'text' && phase === 'answer' && hasKey(aiCfg) && aiCfg.client && !aiLine && (
             <button className="self-start text-caption text-accent underline disabled:opacity-50" disabled={aiBusy}
-              onClick={async () => { setAiBusy(true); try { setAiLine(await rephraseClientLine({ line: (node as { clientLine: string }).clientLine, role: sc.meta.clientRole, brief, emotion: shownEmotion.value + '/10 · ' + shownEmotion.label })); } catch { /* остаётся scripted-реплика */ } setAiBusy(false); }}>
+              onClick={async () => {
+                setAiBusy(true);
+                try {
+                  const r = await rephraseClientLine({ line: (node as { clientLine: string }).clientLine, role: sc.meta.clientRole, brief, emotion: shownEmotion.value + '/10 · ' + shownEmotion.label });
+                  setAiLine(r.line); setAiNote('✓ Реплика ИИ · ' + r.model + ' · ' + Math.round(r.ms / 100) / 10 + ' c');
+                } catch (e) { setAiNote('⚠ ' + (e as Error).message); }
+                setAiBusy(false);
+              }}>
               {aiBusy ? 'ИИ-клиент печатает…' : '⟳ Вариант реплики от ИИ-клиента'}
             </button>
           )}
@@ -150,6 +163,12 @@ export default function Session() {
                     {last.feedbackKind === 'strength' ? '✓ Сильная сторона' : '▲ Зона роста'}
                   </b>
                   <span className="text-body-sm text-ink">{last.feedback}</span>
+                </div>
+              )}
+              {lastSource && (
+                <div className="text-caption text-ink-3">
+                  Оценка: {lastSource.source === 'ai' ? 'ИИ (' + (lastSource.model ?? '') + ')' : 'фолбэк без ИИ'}
+                  {lastSource.ms ? ' · ' + Math.round(lastSource.ms / 100) / 10 + ' c' : ''}
                 </div>
               )}
               <div className="text-caption text-ink-2">Эмоция клиента: <b>{run.emotion.value}/10 · {run.emotion.label}</b></div>
@@ -259,6 +278,11 @@ export default function Session() {
             <input type="checkbox" checked={aiCfg.client} onChange={(e) => setAi({ client: e.target.checked })} className="accent-[#2563EB]" />
             Варианты реплик ИИ-клиента
           </label>
+          <Btn size="sm" variant="secondary" className="mt-3" disabled={checking || !hasKey(aiCfg)}
+            onClick={async () => { setChecking(true); setAiNote((await testKey()).message); setChecking(false); }}>
+            {checking ? 'Проверяю…' : 'Проверить ключ'}
+          </Btn>
+          {aiNote && <div className={'mt-2 rounded-md px-2.5 py-2 text-caption ' + (aiNote.startsWith('✓') ? 'bg-ok/10 text-ok' : 'bg-warn/10 text-warn')}>{aiNote}</div>}
           <p className="text-caption text-ink-3 mt-3 leading-relaxed">
             Демо: ключ живёт только в вашем браузере и уходит напрямую в openrouter.ai. Бесплатные
             модели (:free) — с лимитами OpenRouter. Без ключа сессия полностью работает на
