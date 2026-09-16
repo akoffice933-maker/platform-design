@@ -29,7 +29,7 @@ export default function Session() {
   const node: SNode = nodeOf(run, sc);
   const last = run.steps[run.steps.length - 1];
 
-  const resetLocal = () => { setPhase('answer'); setLeft(0); setRate(4); setFree(''); };
+  const resetLocal = () => { setLeft(0); setRate(4); setFree(''); };
   useEffect(resetLocal, [run.nodeId]);
 
   // конец сценария → сохранить разбор и перейти на E-25
@@ -53,9 +53,11 @@ export default function Session() {
   const total = Object.keys(sc.graph.nodes).length;
   const progress = Math.min(100, Math.round((run.visited.length / total) * 100));
   const skillChips = Object.entries(run.skills).filter(([, v]) => v !== 0).sort((a, b) => b[1] - a[1]);
-  // на реплике/выборе клиент УЖЕ в состоянии emotionAfter узла — показываем его, а не прошлое
+  // на реплике/выборе клиент УЖЕ в состоянии emotionAfter узла; у critical его нет
+  // (эмоции живут в вариантах) — тогда показываем состояние прогона
   const talking = node.type === 'text' || node.type === 'choice' || node.type === 'critical';
-  const shownEmotion: Emotion = phase === 'answer' && talking ? (node as { emotionAfter: Emotion }).emotionAfter : run.emotion;
+  const nodeEmotion = talking ? (node as { emotionAfter?: Emotion }).emotionAfter : undefined;
+  const shownEmotion: Emotion = phase === 'answer' && nodeEmotion ? nodeEmotion : run.emotion;
 
   return (
     <div className="p-4 lg:p-6 max-w-6xl mx-auto grid lg:grid-cols-[1fr_320px] gap-6 m-fade-in">
@@ -205,7 +207,7 @@ export default function Session() {
             <Chip>{sc.meta.durationMin} мин</Chip>
           </div>
           <p className="text-caption text-ink-2 leading-relaxed">{sc.meta.description}</p>
-          <button className="mt-3 text-caption text-err underline" onClick={() => { savedRef.current = false; setRun(startRun(sc)); resetLocal(); }}>
+          <button className="mt-3 text-caption text-err underline" onClick={() => { savedRef.current = false; setPhase('answer'); setRun(startRun(sc)); resetLocal(); }}>
             ⟲ Сбросить прогон
           </button>
         </Card>
