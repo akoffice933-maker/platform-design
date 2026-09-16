@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { SCENARIO, advance, applyOption, buildResult, isEnd, nodeOf, remainingSteps, startRun } from '../lib/engine';
 import type { RunState, SNode, Option, Emotion } from '../lib/engine';
@@ -21,7 +21,11 @@ function Bubble({ children, me }: { children: React.ReactNode; me?: boolean }) {
 export default function Session() {
   const { sid } = useParams();
   const nav = useNavigate();
-  const sc = getScenarioById(sid) ?? SCENARIO; // не найден — открываем эталон
+  // ВАЖНО: useMemo обязателен — getScenarioById парсит localStorage и даёт НОВЫЙ
+  // объект на каждом рендере; без мемоизации эффекты с зависимостью [node]
+  // перезапускались бы ежесекундно (таймер паузы сбрасывался на каждом тике
+  // и «зависал» на сгенерированных сценариях).
+  const sc = useMemo(() => getScenarioById(sid) ?? SCENARIO, [sid]); // не найден — эталон
   const [run, setRun] = useState<RunState>(() => startRun(sc));
   const [phase, setPhase] = useState<'answer' | 'feedback'>('answer');
   const [left, setLeft] = useState(0);
