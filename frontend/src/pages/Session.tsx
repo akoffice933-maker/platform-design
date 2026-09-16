@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { SCENARIO, advance, applyOption, buildResult, isEnd, nodeOf, startRun } from '../lib/engine';
+import { SCENARIO, advance, applyOption, buildResult, isEnd, nodeOf, remainingSteps, startRun } from '../lib/engine';
 import type { RunState, SNode, Option, Emotion } from '../lib/engine';
 import { api } from '../lib/api';
 import { skillLabel } from '../lib/skills';
@@ -79,8 +79,9 @@ export default function Session() {
     setRun(advance(run, { text }, sc));
   };
 
-  const total = Object.keys(sc.graph.nodes).length;
-  const progress = Math.min(100, Math.round((run.visited.length / total) * 100));
+  // прогресс = пройденные шаги / (пройденные + минимальный остаток до финала) —
+  // доходит до 100% ровно на узле end (старый «visited/16» застревал на ~56%)
+  const progress = Math.min(100, Math.round((run.steps.length / (run.steps.length + remainingSteps(run.nodeId, sc))) * 100));
   const skillChips = Object.entries(run.skills).filter(([, v]) => v !== 0).sort((a, b) => b[1] - a[1]);
   // на реплике/выборе клиент УЖЕ в состоянии emotionAfter узла; у critical его нет
   // (эмоции живут в вариантах) — тогда показываем состояние прогона

@@ -9,13 +9,15 @@ export default function Dashboard() {
   const clients = api.getClients();
   const sessions = api.getSessions();
   const week = sessions.filter((s) => Date.now() - +new Date(s.date) < 7 * 864e5).length;
+  const done = sessions.filter((s) => s.completed);
+  const avgDrop = done.length ? Math.round((done.reduce((a, s) => a + (s.emotionFrom - s.emotionTo), 0) / done.length) * 10) / 10 : 0;
 
   return (
     <div className="p-4 lg:p-8 max-w-6xl mx-auto m-fade-in">
       <div className="flex items-baseline justify-between flex-wrap gap-2 mb-6">
         <div>
           <h1 className="text-h2">Добрый день, Ирина</h1>
-          <p className="text-body-sm text-ink-2 mt-1">На этой неделе 2 сессии в симуляторе и 3 игры у клиентов.</p>
+          <p className="text-body-sm text-ink-2 mt-1">На этой неделе сессий: {week}. Клиентов активных: {clients.filter((c) => c.status === 'активен').length}.</p>
         </div>
         <Link to="/app/scenarios"><Btn>▶ Запустить сценарий</Btn></Link>
       </div>
@@ -23,7 +25,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Stat label="Клиенты" value={clients.length} hint="3 активных · 1 пауза" />
         <Stat label="Сессии за 7 дней" value={week} hint="симулятор + разборы" />
-        <Stat label="Средняя тревога" value="↓ 2.4" hint="после сессий, шкала 0–10" tone="text-ok" />
+        <Stat label="Среднее снижение тревоги" value={(avgDrop > 0 ? '↓ ' : avgDrop < 0 ? '↑ ' : '± ') + Math.abs(avgDrop)} hint={`${done.length} завершённых, шкала 0–10`} tone={avgDrop > 0 ? 'text-ok' : 'text-warn'} />
         <Stat label="Верификации" value={api.getVerifications().length} hint="ожидают решения" tone="text-warn" />
       </div>
 

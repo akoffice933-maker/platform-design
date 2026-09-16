@@ -159,7 +159,8 @@ export function advance(run: RunState, extra?: { text?: string; selfRate?: numbe
       pushStep(next, { nodeId: run.nodeId, kind: 'timer', clientLine: node.prompt, emotionAfter: node.emotionAfter });
       break;
     case 'scale':
-      next.emotion = { ...node.emotionAfter };
+      // клиент сам назвал число — эмоция = его оценка (а не фиксированная из узла)
+      next.emotion = { value: extra?.selfRate ?? node.selfRate, label: 'самооценка клиента' };
       pushStep(next, { nodeId: run.nodeId, kind: 'scale', answer: 'Самооценка: ' + (extra?.selfRate ?? node.selfRate) + '/10', emotionAfter: node.emotionAfter });
       break;
     case 'input':
@@ -223,4 +224,29 @@ export function buildResult(run: RunState, sc: Scenario = SCENARIO): SessionResu
 
 export function isEnd(run: RunState, sc: Scenario = SCENARIO): boolean {
   return nodeOf(run, sc).type === 'end';
+}
+
+/** Оценка остатка до финала по ДЛИННЕЙШЕЙ ветке — для честного прогресс-бара.
+ *  max (а не min) гарантирует: прогресс не убывает ни на одном пути и достигает
+ *  100% ровно на узле end (min давал «откат» процентов на спокойной ветке). */
+export function remainingSteps(nodeId: string, sc: Scenario = SCENARIO): number {
+  const memo = new Map<string, number>();
+  const visiting = new Set<string>();
+  const d = (id: string): number => {
+    if (memo.has(id)) return memo.get(id) as number;
+    if (visiting.has(id)) return 0; // защита от циклов
+    visiting.add(id);
+    const n = sc.graph.nodes[id];
+    let v = 0;
+    if (n) {
+      if (n.type === 'end') v = 0;
+      else if (n.type === 'branch') v = 1 + Math.max(d(n.else), ...n.branches.map((b) => d(b.then)));
+      else if (n.type === 'choice' || n.type === 'critical') v = 1 + Math.max(...n.options.map((o) => d(o.next)));
+      else v = 1 + d(n.next);
+    }
+    visiting.delete(id);
+    memo.set(id, v);
+    return v;
+  };
+  return d(nodeId);
 }

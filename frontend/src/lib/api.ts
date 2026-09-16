@@ -91,8 +91,8 @@ export const api = {
   getClients(): ClientRow[] { return read().clients; },
 
   // — средние баллы «за 5 сессий» (стаб аналитики) —
-  getAverages(): Record<string, number> {
-    const sessions = read().sessions.slice(0, 5);
+  getAverages(excludeId?: string): Record<string, number> {
+    const sessions = read().sessions.filter((s) => s.id !== excludeId).slice(0, 5);
     const acc: Record<string, number> = {};
     for (const s of sessions) for (const [k, v] of Object.entries(s.skills)) acc[k] = (acc[k] ?? 0) + v;
     return Object.fromEntries(Object.entries(acc).map(([k, v]) => [k, Math.round((v / Math.max(1, sessions.length)) * 10) / 10]));

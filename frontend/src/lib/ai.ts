@@ -151,9 +151,9 @@ function fallbackVerdict(p: { hints: string[]; text: string; nodeScores?: Record
   if (best >= 0.34) {
     return { scores: base, feedback: 'Ответ близок к подсказке «' + bestHint + '» — разверните её своими словами.', kind: 'strength', source: 'fallback' };
   }
-  const weak = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, Math.sign(v)])) as Record<string, number>;
+  // далёкий от подсказок ответ — ноль баллов (раньше sign() давал те же +1, что и сильный)
   return {
-    scores: weak,
+    scores: {},
     feedback: bestHint ? 'Ответ далёк от подсказки «' + bestHint + '» — сначала отразите чувство клиента.' : 'Свободный ответ принят: добавьте отражение чувства клиента.',
     kind: 'growth',
     source: 'fallback',

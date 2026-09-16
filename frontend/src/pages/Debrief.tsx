@@ -7,7 +7,7 @@ import { EmoColor } from '../components/ui';
 export default function Debrief() {
   const { rid } = useParams();
   const s = api.getSession(rid ?? '');
-  const avg = api.getAverages();
+  const avg = api.getAverages(s?.id); // текущую сессию из «среднего» исключаем
 
   if (!s) {
     return (
