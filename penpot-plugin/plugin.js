@@ -5898,11 +5898,48 @@
   }
 
   // src/plugin.ts
-  function main() {
+  function uiOpen() {
+    try {
+      penpot.ui && penpot.ui.open("Platform Builder", "", { width: 380, height: 520 });
+    } catch (_) {
+    }
+  }
+  function uiLog(text) {
+    try {
+      penpot.ui && penpot.ui.sendMessage({ type: "log", text });
+    } catch (_) {
+    }
+  }
+  function uiDone(seconds, errors) {
+    try {
+      penpot.ui && penpot.ui.sendMessage({ type: "done", seconds, problems: errors });
+    } catch (_) {
+    }
+  }
+  function yieldFrame() {
+    return new Promise((resolve) => {
+      setTimeout(resolve, 30);
+    });
+  }
+  async function main() {
+    const t0 = Date.now();
     const problems = [];
     let colorsCreated = 0;
     let textOk = 0;
-    try {
+    uiOpen();
+    const stage = async (label, fn) => {
+      uiLog("\u2026 " + label);
+      await yieldFrame();
+      try {
+        fn();
+        uiLog("\u2713 " + label);
+      } catch (e) {
+        const msg = e && e.message ? e.message : String(e);
+        problems.push("\xD7 " + label + ": " + msg);
+        uiLog("\xD7 " + label + " \u2014 \u043E\u0448\u0438\u0431\u043A\u0430, \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u044E (\u0434\u0435\u0442\u0430\u043B\u0438 \u0432 \u0434\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u0438\u043A\u0435)");
+      }
+    };
+    await stage("\u041E\u0447\u0438\u0441\u0442\u043A\u0430 \u043F\u0440\u043E\u0448\u043B\u043E\u0439 \u0441\u0431\u043E\u0440\u043A\u0438 (\u0438\u0434\u0435\u043C\u043F\u043E\u0442\u0435\u043D\u0442\u043D\u043E\u0441\u0442\u044C)", () => {
       const page = penpot.currentPage;
       const r1 = removeShapesByName(page, "01_Foundations / audit");
       const r2 = removeShapesByName(page, "02_Components / UI-kit");
@@ -5916,77 +5953,51 @@
       for (const nm of SCREEN6_FRAME_NAMES) rS += removeShapesByName(page, nm);
       rS += removeShapesByName(page, HANDOFF_BOARD_NAME);
       if (r1 || r2 || r3 || rS) problems.push("\u2139 \u043F\u0435\u0440\u0435\u0441\u043E\u0431\u0440\u0430\u043D\u043E \u0444\u0440\u0435\u0439\u043C\u043E\u0432: " + (r1 + r2 + r3 + rS));
-    } catch (_) {
-    }
-    try {
+    });
+    await stage("\u0426\u0432\u0435\u0442\u043E\u0432\u044B\u0435 \u0441\u0442\u0438\u043B\u0438 (33)", () => {
       colorsCreated = createColorStyles(problems);
-    } catch (e) {
-      problems.push("\xD7 \u0446\u0432\u0435\u0442\u043E\u0432\u044B\u0435 \u0441\u0442\u0438\u043B\u0438: " + e);
-    }
-    try {
+    });
+    await stage("\u0422\u0435\u043A\u0441\u0442\u043E\u0432\u044B\u0435 \u0441\u0442\u0438\u043B\u0438 (10)", () => {
       textOk = createTextStyles(problems);
-    } catch (e) {
-      problems.push("\xD7 \u0442\u0435\u043A\u0441\u0442\u043E\u0432\u044B\u0435 \u0441\u0442\u0438\u043B\u0438: " + e);
-    }
-    try {
+    });
+    await stage("\u0411\u043E\u0440\u0434 Foundations", () => {
       buildFoundationsBoard(colorsCreated, textOk, problems, pickFont(FONT_FALLBACKS));
-    } catch (e) {
-      problems.push("\xD7 \u0431\u043E\u0440\u0434 Foundations: " + e);
-    }
-    try {
+    });
+    await stage("\u0411\u043E\u0440\u0434 UI-kit (72 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442\u0430)", () => {
       buildUIKitBoard(problems);
-    } catch (e) {
-      problems.push("\xD7 \u0431\u043E\u0440\u0434 UI-kit: " + e);
-    }
-    try {
+    });
+    await stage("\u0411\u043E\u0440\u0434 Domain (34 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442\u0430)", () => {
       buildDomainBoard(problems);
-    } catch (e) {
-      problems.push("\xD7 \u0431\u043E\u0440\u0434 Domain: " + e);
-    }
-    try {
+    });
+    await stage("\u042D\u043A\u0440\u0430\u043D\u044B E-01\u2026E-12", () => {
       buildScreens(problems);
-    } catch (e) {
-      problems.push("\xD7 \u044D\u043A\u0440\u0430\u043D\u044B: " + e);
-    }
-    try {
+    });
+    await stage("\u042D\u043A\u0440\u0430\u043D\u044B \u0441\u0438\u043C\u0443\u043B\u044F\u0442\u043E\u0440\u0430 E-20\u2026E-28", () => {
       buildScreens2(problems);
-    } catch (e) {
-      problems.push("\xD7 \u044D\u043A\u0440\u0430\u043D\u044B \u0441\u0438\u043C\u0443\u043B\u044F\u0442\u043E\u0440\u0430: " + e);
-    }
-    try {
+    });
+    await stage("\u042D\u043A\u0440\u0430\u043D\u044B \u0438\u0433\u0440/\u043A\u043B\u0438\u0435\u043D\u0442\u0430 E-30\u2026E-44", () => {
       buildScreens3(problems);
-    } catch (e) {
-      problems.push("\xD7 \u044D\u043A\u0440\u0430\u043D\u044B \u0438\u0433\u0440/\u043A\u043B\u0438\u0435\u043D\u0442\u0430: " + e);
-    }
-    try {
+    });
+    await stage("\u042D\u043A\u0440\u0430\u043D\u044B TMA E-50\u2026E-57o (151-\u0439 \u0431\u043E\u0440\u0434)", () => {
       buildScreens4(problems);
-    } catch (e) {
-      problems.push("\xD7 TMA \u044D\u043A\u0440\u0430\u043D\u044B: " + e);
-    }
-    try {
+    });
+    await stage("\u042D\u043A\u0440\u0430\u043D\u044B \u0430\u0434\u043C\u0438\u043D\u043A\u0438/\u0441\u0443\u043F\u0435\u0440\u0432\u0438\u0437\u0438\u0438 E-60\u2026E-73", () => {
       buildScreens5(problems);
-    } catch (e) {
-      problems.push("\xD7 \u044D\u043A\u0440\u0430\u043D\u044B \u0430\u0434\u043C\u0438\u043D\u043A\u0438/\u0441\u0443\u043F\u0435\u0440\u0432\u0438\u0437\u0438\u0438: " + e);
-    }
-    try {
+    });
+    await stage("\u0421\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u044F E-80\u2026E-85 (18 \u0444\u0440\u0435\u0439\u043C\u043E\u0432)", () => {
       buildScreens6(problems);
-    } catch (e) {
-      problems.push("\xD7 \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u044F: " + e);
-    }
-    try {
+    });
+    await stage("\u0411\u043E\u0440\u0434 Handoff", () => {
       buildHandoffBoard(problems);
-    } catch (e) {
-      problems.push("\xD7 Handoff: " + e);
-    }
-    try {
+    });
+    await stage("\u041A\u043B\u0438\u043A\u0430\u0431\u0435\u043B\u044C\u043D\u044B\u0435 \u043F\u043E\u0442\u043E\u043A\u0438 (7.1\u20137.6)", () => {
       buildFlows(problems);
-    } catch (e) {
-      problems.push("\xD7 \u043F\u0440\u043E\u0442\u043E\u0442\u0438\u043F\u044B: " + e);
-    }
-    try {
+    });
+    await stage("\u0411\u043E\u0440\u0434 \u0441\u0430\u043C\u043E\u0434\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u0438\u043A\u0438", () => {
       buildDiagnostics(problems);
-    } catch (_) {
-    }
+    });
+    uiLog("\u0413\u043E\u0442\u043E\u0432\u043E. Shift+1 \u2014 \u043F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0432\u0441\u044E \u0441\u0431\u043E\u0440\u043A\u0443; \u0431\u043E\u0440\u0434 00_Diagnostics / run \u2014 \u043E\u0442\u0447\u0451\u0442 \u043F\u0440\u043E\u0433\u043E\u043D\u0430.");
+    uiDone(Math.round((Date.now() - t0) / 100) / 10, problems.filter((p) => p.startsWith("\xD7")).length);
   }
   main();
   function buildDiagnostics(problems) {

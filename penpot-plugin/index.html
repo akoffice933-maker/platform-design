@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Platform Builder</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font: 13px/1.45 Inter, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #FFFFFF; color: #0F172A; padding: 14px 14px 10px;
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  h1 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  h1 .mark { width: 18px; height: 18px; border-radius: 5px; flex: none;
+             background: linear-gradient(135deg, #2563EB, #7C3AED); }
+  .sub { font-size: 11px; color: #475569; margin: 4px 0 10px; }
+  #log {
+    flex: 1; overflow-y: auto; border: 1px solid #E2E8F0; border-radius: 10px;
+    background: #F7F8FA; padding: 8px 10px; font-size: 12px;
+  }
+  #log .l { padding: 2px 0; color: #0F172A; word-break: break-word; }
+  #log .ok { color: #16A34A; }
+  #log .err { color: #DC2626; font-weight: 600; }
+  #log .done { margin-top: 6px; padding-top: 6px; border-top: 1px solid #E2E8F0;
+               font-weight: 700; color: #2563EB; }
+  footer { font-size: 11px; color: #475569; margin-top: 10px; }
+  footer b { color: #0F172A; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1D2430; color: #F8FAFC; }
+    .sub, footer { color: #CBD5E1; } footer b { color: #F8FAFC; }
+    #log { background: #171E29; border-color: #334155; }
+    #log .l { color: #F8FAFC; } #log .done { color: #60A5FA; border-color: #334155; }
+  }
+</style>
+</head>
+<body>
+  <h1><span class="mark"></span>Platform Builder v1.2</h1>
+  <p class="sub">Собирает: 33 цвета + 10 текстовых стилей · борды Foundations / UI-kit / Domain (106 компонентов) · фреймы E-01…E-85 + offline (151 борд) · Handoff · 6 кликабельных потоков · борд самодиагностики.</p>
+  <main id="log" aria-live="polite"></main>
+  <footer>После «Готово»: <b>Shift+1</b> — показать всю сборку. Борд <b>00_Diagnostics / run</b> создаётся в точке x=100, y=−560 (выше начала координат). Сборка идёт на <b>текущей</b> странице — начните с пустой.</footer>
+<script>
+  const log = document.getElementById('log');
+  function add(t, cls) {
+    const d = document.createElement('div');
+    d.className = 'l' + (cls ? ' ' + cls : '');
+    d.textContent = t;
+    log.appendChild(d);
+    log.scrollTop = 1e9;
+  }
+  window.addEventListener('message', (e) => {
+    const m = e && e.data;
+    if (!m || typeof m !== 'object') return;
+    if (m.type === 'log') {
+      const t = String(m.text || '');
+      add(t, t.startsWith('×') ? 'err' : (t.startsWith('✓') ? 'ok' : ''));
+    } else if (m.type === 'done') {
+      add('Готово за ' + m.seconds + ' c · ошибок: ' + m.problems + '. Смотрите борд 00_Diagnostics / run.', 'done');
+    }
+  });
+  add('Окно открыто. Сборка запустится автоматически…');
+</script>
+</body>
+</html>

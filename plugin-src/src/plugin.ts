@@ -1,10 +1,11 @@
 // ============================================================================
-// Platform Builder — плагин для Penpot (v0.2)
-// Автоматизирует Итерации 1–2 ТЗ:
-//   1) Foundations: 33 цветовых стиля, 10 текстовых стилей, борд-аудит;
-//   2) UI-kit: борд компонентов + ~70 компонентов «Name / Variant / State».
-// Идемпотентен: повторный запуск обновляет стили и пересобирает борды,
-// существующие компоненты не дублируются.
+// Platform Builder — плагин для Penpot (v1.2)
+// Автоматизирует всё ТЗ v1.0 + P1: стили, борды Foundations/UI-kit/Domain,
+// фреймы E-01…E-85 (+ offline E-53o), Handoff, 6 кликабельных потоков,
+// борд самодиагностики. 151 борд.
+// v1.2: окно прогресса (penpot.ui) + асинхронные стадии — сборка длинная
+// (минуты), без лога выглядела как «ничего не происходит».
+// Идемпотентен: повторный запуск пересобирает свои борды, ничего не дублирует.
 // ============================================================================
 
 declare const penpot: any;
@@ -23,13 +24,51 @@ import { buildHandoffBoard, HANDOFF_BOARD_NAME } from './handoff';
 import { pickFont, removeShapesByName, setOrigin, FONT_FALLBACKS } from './draw';
 import { txt, rect } from './screens';
 
-function main(): void {
+// --- Окно прогресса (не критично: без UI сборка всё равно выполняется) ------
+
+function uiOpen(): void {
+  try { penpot.ui && penpot.ui.open('Platform Builder', '', { width: 380, height: 520 }); }
+  catch (_) { /* мок / старый рантайм */ }
+}
+
+function uiLog(text: string): void {
+  try { penpot.ui && penpot.ui.sendMessage({ type: 'log', text }); }
+  catch (_) { /* мок / старый рантайм */ }
+}
+
+function uiDone(seconds: number, errors: number): void {
+  try { penpot.ui && penpot.ui.sendMessage({ type: 'done', seconds, problems: errors }); }
+  catch (_) { /* мок / старый рантайм */ }
+}
+
+// Пауза между стадиями: отдаёт слот event loop, чтобы postMessage
+// из лога реально долетали до окна, а Penpot успевал дышать.
+function yieldFrame(): Promise<void> {
+  return new Promise((resolve) => { setTimeout(resolve, 30); });
+}
+
+async function main(): Promise<void> {
+  const t0 = Date.now();
   const problems: string[] = [];
   let colorsCreated = 0;
   let textOk = 0;
 
-  // Идемпотентность: пересобираем борды и фреймы с теми же именами
-  try {
+  uiOpen();
+
+  const stage = async (label: string, fn: () => void): Promise<void> => {
+    uiLog('… ' + label);
+    await yieldFrame();
+    try {
+      fn();
+      uiLog('✓ ' + label);
+    } catch (e: any) {
+      const msg = e && e.message ? e.message : String(e);
+      problems.push('× ' + label + ': ' + msg);
+      uiLog('× ' + label + ' — ошибка, продолжаю (детали в диагностике)');
+    }
+  };
+
+  await stage('Очистка прошлой сборки (идемпотентность)', () => {
     const page = penpot.currentPage;
     const r1 = removeShapesByName(page, '01_Foundations / audit');
     const r2 = removeShapesByName(page, '02_Components / UI-kit');
@@ -43,23 +82,25 @@ function main(): void {
     for (const nm of SCREEN6_FRAME_NAMES) rS += removeShapesByName(page, nm);
     rS += removeShapesByName(page, HANDOFF_BOARD_NAME);
     if (r1 || r2 || r3 || rS) problems.push('ℹ пересобрано фреймов: ' + (r1 + r2 + r3 + rS));
-  } catch (_) { /* первая сборка */ }
+  });
 
-  try { colorsCreated = createColorStyles(problems); } catch (e) { problems.push('× цветовые стили: ' + e); }
-  try { textOk = createTextStyles(problems); } catch (e) { problems.push('× текстовые стили: ' + e); }
-  try { buildFoundationsBoard(colorsCreated, textOk, problems, pickFont(FONT_FALLBACKS)); }
-  catch (e) { problems.push('× борд Foundations: ' + e); }
-  try { buildUIKitBoard(problems); } catch (e) { problems.push('× борд UI-kit: ' + e); }
-  try { buildDomainBoard(problems); } catch (e) { problems.push('× борд Domain: ' + e); }
-  try { buildScreens(problems); } catch (e) { problems.push('× экраны: ' + e); }
-  try { buildScreens2(problems); } catch (e) { problems.push('× экраны симулятора: ' + e); }
-  try { buildScreens3(problems); } catch (e) { problems.push('× экраны игр/клиента: ' + e); }
-  try { buildScreens4(problems); } catch (e) { problems.push('× TMA экраны: ' + e); }
-  try { buildScreens5(problems); } catch (e) { problems.push('× экраны админки/супервизии: ' + e); }
-  try { buildScreens6(problems); } catch (e) { problems.push('× состояния: ' + e); }
-  try { buildHandoffBoard(problems); } catch (e) { problems.push('× Handoff: ' + e); }
-  try { buildFlows(problems); } catch (e) { problems.push('× прототипы: ' + e); }
-  try { buildDiagnostics(problems); } catch (_) { /* диагностика не критична */ }
+  await stage('Цветовые стили (33)', () => { colorsCreated = createColorStyles(problems); });
+  await stage('Текстовые стили (10)', () => { textOk = createTextStyles(problems); });
+  await stage('Борд Foundations', () => { buildFoundationsBoard(colorsCreated, textOk, problems, pickFont(FONT_FALLBACKS)); });
+  await stage('Борд UI-kit (72 компонента)', () => { buildUIKitBoard(problems); });
+  await stage('Борд Domain (34 компонента)', () => { buildDomainBoard(problems); });
+  await stage('Экраны E-01…E-12', () => { buildScreens(problems); });
+  await stage('Экраны симулятора E-20…E-28', () => { buildScreens2(problems); });
+  await stage('Экраны игр/клиента E-30…E-44', () => { buildScreens3(problems); });
+  await stage('Экраны TMA E-50…E-57o (151-й борд)', () => { buildScreens4(problems); });
+  await stage('Экраны админки/супервизии E-60…E-73', () => { buildScreens5(problems); });
+  await stage('Состояния E-80…E-85 (18 фреймов)', () => { buildScreens6(problems); });
+  await stage('Борд Handoff', () => { buildHandoffBoard(problems); });
+  await stage('Кликабельные потоки (7.1–7.6)', () => { buildFlows(problems); });
+  await stage('Борд самодиагностики', () => { buildDiagnostics(problems); });
+
+  uiLog('Готово. Shift+1 — показать всю сборку; борд 00_Diagnostics / run — отчёт прогона.');
+  uiDone(Math.round((Date.now() - t0) / 100) / 10, problems.filter((p) => p.startsWith('×')).length);
 }
 
 main();
