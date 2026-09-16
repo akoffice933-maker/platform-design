@@ -77,6 +77,16 @@ export default function Shell({ role }: { role: keyof typeof NAV }) {
           </span>
         </header>
 
+        {/* Навигация для узких экранов: сайдбар скрыт до lg — дублируем разделы «чипсами» */}
+        <nav aria-label="Разделы" className="lg:hidden flex-none flex gap-1.5 overflow-x-auto px-3 py-2 border-b border-line bg-bg-primary/95 backdrop-blur sticky top-16 z-10">
+          {NAV[role].map((n) => (
+            <NavLink key={n.to} to={n.to} end={'end' in n && n.end}
+              className={({ isActive }) => `flex-none px-3 py-2 rounded-full text-body-sm font-medium whitespace-nowrap border transition-colors duration-fast ease-platform-out ${isActive ? 'bg-accent/10 text-accent border-accent/40' : 'text-ink-2 border-line bg-bg-secondary hover:border-line-focus'}`}>
+              {n.label}
+            </NavLink>
+          ))}
+        </nav>
+
         <main className="flex-1 min-w-0">
           <Outlet />
         </main>
