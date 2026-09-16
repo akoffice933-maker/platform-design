@@ -10,7 +10,8 @@
     "prebuild": "node scripts/sync-assets.mjs",
     "build": "vite build",
     "preview": "vite preview --host",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:demo": "vite build --base=/platform-design/app/ --mode demo"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -5,4 +5,15 @@ export default defineConfig({
   plugins: [react()],
   server: { host: true, port: 5173, allowedHosts: true },
   preview: { host: true, port: 4173, allowedHosts: true },
+  build: {
+    rollupOptions: {
+      output: {
+        // recharts и react — тяжёлые вендоры, держим их в отдельных чанках
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+        },
+      },
+    },
+  },
 });

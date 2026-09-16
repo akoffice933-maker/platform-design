@@ -6,11 +6,17 @@ Tailwind** (пресет дизайн-токенов из корня репо) +
 
 ## Запуск
 
+**Живое демо (Pages, HashRouter):** https://akoffice933-maker.github.io/platform-design/app/
+
 ```bash
 cd frontend
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 (BrowserRouter)
+npm run build:demo # сборка для Pages → dist (base /platform-design/app/, HashRouter)
 ```
+
+Деплой демо: `npm run build:demo`, затем заменить каталог `app/` в корне репо содержимым `dist/`.
+CI (`.github/workflows/ci.yml`) проверяет: сценарии (docs/09), сборку плагина + smoke 151 борд + свежесть бандла, tsc + vite build фронтенда.
 
 `predev`/`prebuild` синхронизируют артефакты дизайн-системы из корня репо
 (`tokens/tokens.css`, `tokens/motion.css`, эталонный сценарий `scenarios/exam-anxiety.json`).

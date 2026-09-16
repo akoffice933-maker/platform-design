@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  scenarios:
+    name: Валидация сценариев (docs/09)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Установка jsonschema
+        run: pip install jsonschema
+      - name: Схема сама валидна (draft 2020-12)
+        run: >
+          python3 -c "import json, jsonschema; s = json.load(open('schemas/scenario.schema.json'));
+          jsonschema.Draft202012Validator.check_schema(s); print('schema OK')"
+      - name: Эталоны проходят валидатор (схема + графовый линтер)
+        run: python3 tools/validate_scenario.py scenarios/*.json
+
+  plugin:
+    name: "Плагин: сборка + smoke (151 борд)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Сборка плагина (esbuild)
+        working-directory: plugin-src
+        run: npm install && npm run build
+      - name: Свежий бандл совпадает с penpot-plugin/plugin.js
+        run: |
+          cp plugin-src/dist/plugin.js penpot-plugin/plugin.js
+          git diff --exit-code penpot-plugin/plugin.js || {
+            echo "::error::penpot-plugin/plugin.js устарел: выполните 'npm run build' в plugin-src и закоммитьте новый plugin.js"; exit 1; }
+      - name: Smoke-тест на моке Penpot
+        run: node tests/mock-penpot-test.cjs
+
+  frontend:
+    name: "Фронтенд: tsc + vite build"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Установка зависимостей
+        working-directory: frontend
+        run: npm install
+      - name: Проверка типов
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Прод-сборка
+        working-directory: frontend
+        run: npm run build
