@@ -1,0 +1,130 @@
+/* ============================================================================
+   Platform Design · Motion-пресет (P1, docs/07)
+   ============================================================================
+   Кодовое воплощение раздела motion/easing из tokens/design-tokens.json.
+   Подключается ВМЕСТЕ с tokens/tokens.css (переменные --motion-*/--ease-*).
+
+   Способы подключения:
+     1) CSS:      @import './tokens.css'; @import './motion.css';
+     2) Tailwind: пресет tokens/tailwind.config.preset.js уже маппит
+                  duration-fast/base/slow/spring и ease-out/in-out/spring —
+                  классы duration-fast ease-spring работают из коробки;
+     3) Инлайн:   style="transition: opacity var(--motion-base) var(--ease-in-out)".
+
+   Правила выбора длительности (ТЗ, раздел 3):
+     150ms  — ховеры, фокус, нажатие (обратная связь);
+     250ms  — переходы экранов, модалки, тултипы;
+     400ms  — крупные переходы (раскрытие панелей, смена колонок);
+     500ms  — появление карточек со spring-кривой (доверие, «живой» UI).
+
+   Доступность: любой нестандартный переход обязан деградировать при
+   prefers-reduced-motion — блок в конце файла гасит ВСЁ автоматически.
+   ========================================================================== */
+
+/* --- 1. Ключевые кадры ----------------------------------------------------- */
+
+@keyframes m-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes m-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* появление контента снизу — карточки библиотеки, списки сессий */
+@keyframes m-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* вход справа — смена шагов сценария (вперёд) */
+@keyframes m-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* вход слева — смена шагов сценария (назад) */
+@keyframes m-slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* мягкое появление с масштабом — модалки, поповеры */
+@keyframes m-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* spring-появление — карточки игр/сценариев, результаты */
+@keyframes m-spring-pop {
+  0%   { opacity: 0; transform: scale(0.9); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* пульс скелетонов — E-80 «Загрузка» */
+@keyframes m-skeleton {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.45; }
+  100% { opacity: 1; }
+}
+
+/* рост полосы прогресса / шкалы — tmaProgress, EmotionIndicator */
+@keyframes m-grow-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* --- 2. Утилиты ------------------------------------------------------------ */
+
+.m-fade-in        { animation: m-fade-in var(--motion-base) var(--ease-in-out) both; }
+.m-fade-out       { animation: m-fade-out var(--motion-base) var(--ease-in-out) both; }
+.m-slide-up       { animation: m-slide-up var(--motion-spring) var(--ease-out) both; }
+.m-slide-right    { animation: m-slide-in-right var(--motion-base) var(--ease-out) both; }
+.m-slide-left     { animation: m-slide-in-left var(--motion-base) var(--ease-out) both; }
+.m-scale-in       { animation: m-scale-in var(--motion-fast) var(--ease-out) both; }
+.m-spring-pop     { animation: m-spring-pop var(--motion-spring) var(--ease-spring) both; }
+
+/* скелетон: добавить на элемент с фоном var(--color-bg-tertiary) */
+.m-skeleton       { animation: m-skeleton 1.6s var(--ease-in-out) infinite; }
+
+/* полоса прогресса/шкалы: transform-origin задаётся потребителем */
+.m-grow-x         { animation: m-grow-x var(--motion-slow) var(--ease-out) both; }
+
+/* микро-взаимодействия (длительности из токенов, без keyframes) */
+.m-press          { transition: transform var(--motion-fast) var(--ease-out); }
+.m-press:active   { transform: scale(0.97); }
+
+.m-lift           { transition: transform var(--motion-fast) var(--ease-out),
+                                box-shadow var(--motion-fast) var(--ease-out); }
+.m-lift:hover     { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.m-focusable      { transition: box-shadow var(--motion-fast) var(--ease-out); }
+.m-focusable:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent, #2563EB); }
+
+/* стаггер появления списков: .m-stagger > * { ... } — задержка по индексу */
+.m-stagger > *    { animation: m-slide-up var(--motion-spring) var(--ease-out) both; }
+.m-stagger > *:nth-child(1)  { animation-delay: 40ms; }
+.m-stagger > *:nth-child(2)  { animation-delay: 80ms; }
+.m-stagger > *:nth-child(3)  { animation-delay: 120ms; }
+.m-stagger > *:nth-child(4)  { animation-delay: 160ms; }
+.m-stagger > *:nth-child(5)  { animation-delay: 200ms; }
+.m-stagger > *:nth-child(6)  { animation-delay: 240ms; }
+.m-stagger > *:nth-child(7)  { animation-delay: 280ms; }
+.m-stagger > *:nth-child(8)  { animation-delay: 320ms; }
+.m-stagger > *:nth-child(n+9){ animation-delay: 360ms; }
+
+/* --- 3. Доступность: prefers-reduced-motion -------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

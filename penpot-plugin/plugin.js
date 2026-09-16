@@ -149,7 +149,8 @@
     "share-2": '<svg class="lucide lucide-share-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="18" cy="5" r="3" /> <circle cx="6" cy="12" r="3" /> <circle cx="18" cy="19" r="3" /> <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /> <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /> </svg>',
     "download": '<svg class="lucide lucide-download" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path d="m7 10 5 5 5-5" /> </svg>',
     "rotate-ccw": '<svg class="lucide lucide-rotate-ccw" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path d="M3 3v5h5" /> </svg>',
-    "arrow-right": '<svg class="lucide lucide-arrow-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M5 12h14" /> <path d="m12 5 7 7-7 7" /> </svg>'
+    "arrow-right": '<svg class="lucide lucide-arrow-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M5 12h14" /> <path d="m12 5 7 7-7 7" /> </svg>',
+    "wifi-off": '<svg class="lucide lucide-wifi-off" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 20h.01" /><path d="M8.5 16.429a5 5 0 0 1 7 0" /><path d="M5 12.859a10 10 0 0 1 5.17-2.69" /><path d="M19 12.859a10 10 0 0 0-2.007-1.523" /><path d="M2 8.82a15 15 0 0 1 4.177-2.643" /><path d="M22 8.82a15 15 0 0 0-11.288-3.764" /><path d="m2 2 20 20" /></svg>'
   };
 
   // src/draw.ts
@@ -4334,6 +4335,26 @@
   function e53b(f) {
     e53body(f, false);
   }
+  function e53o(f) {
+    tgHeader(f, "\u0414\u044B\u0445\u0430\u043D\u0438\u0435 4-7-8");
+    tmaProgress(f, 24, 72, 3, 6);
+    const ring = makeEllipse(f, (W - 88) / 2, 152, 88, 88, "#1E293B");
+    ring.name = "offline-badge";
+    ic(f, "wifi-off", (W - 36) / 2, 178, 36, "#FDE68A");
+    const t1 = txt(f, 0, 268, "\u041D\u0435\u0442 \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u044F", 18, 700, C.D_INK);
+    centerTxt2(t1, 0, W);
+    const s1 = txt(f, 0, 302, "\u041F\u043E\u0445\u043E\u0436\u0435, \u0441\u0432\u044F\u0437\u044C \u043F\u0440\u043E\u043F\u0430\u043B\u0430. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0438\u043D\u0442\u0435\u0440\u043D\u0435\u0442", 13, 400, C.D_INK2);
+    centerTxt2(s1, 0, W);
+    const s2 = txt(f, 0, 324, "\u0438 \u043F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u043F\u043E\u043F\u044B\u0442\u043A\u0443.", 13, 400, C.D_INK2);
+    centerTxt2(s2, 0, W);
+    card(f, 24, 374, W - 48, 84, "offline-progress-card");
+    ic(f, "circle-check", 40, 392, 18, C.SUCCESS);
+    txt(f, 66, 390, "\u041F\u0440\u043E\u0433\u0440\u0435\u0441\u0441 \u043D\u0435 \u043F\u043E\u0442\u0435\u0440\u044F\u043D", 13, 600, C.D_INK);
+    txt(f, 66, 412, "\u0428\u0430\u0433 3 \u0438\u0437 6 \xB7 \u043E\u0442\u0432\u0435\u0442\u044B \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u044E\u0442\u0441\u044F \u0441\u0430\u043C\u0438", 11, 400, C.D_INK2);
+    const lk = txt(f, 0, 722, "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u043E\u0444\u043B\u0430\u0439\u043D", 13, 500, "#60A5FA");
+    centerTxt2(lk, 0, W);
+    mainBtn(f, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C", true);
+  }
   function e54(f) {
     tgHeader(f, "\u0413\u043E\u0442\u043E\u0432\u043E");
     ic(f, "circle-check", (W - 64) / 2, 112, 64, C.SUCCESS);
@@ -4523,6 +4544,7 @@
     { code: "E-52", title: "\u0418\u0433\u0440\u044B", draw: e52 },
     { code: "E-53", title: "\u041F\u0440\u043E\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u0435", draw: e53 },
     { code: "E-53", title: "\u041F\u0440\u043E\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u0435 \xB7 \u043D\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u043E", draw: e53b },
+    { code: "E-53o", title: "\u041D\u0435\u0442 \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u044F", draw: e53o },
     { code: "E-54", title: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442", draw: e54 },
     { code: "E-55", title: "\u0414\u043D\u0435\u0432\u043D\u0438\u043A", draw: e55 },
     { code: "E-56", title: "\u041F\u0440\u043E\u0433\u0440\u0435\u0441\u0441", draw: e56 },

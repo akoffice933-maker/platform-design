@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const stats = { colorStyles: 0, typoStyles: 0, boards: [], components: [], texts: 0, rects: 0, ellipses: 0, svgImports: 0, groups: 0, interactions: [], flows: [] };
+const stats = { colorStyles: 0, typoStyles: 0, boards: [], components: [], texts: 0, rects: 0, ellipses: 0, svgImports: 0, groups: 0, interactions: [], flows: [], textList: [] };
 
 function makeShape(kind) {
   return {
@@ -51,12 +51,12 @@ global.penpot = {
   createBoard() { const b = makeShape('board'); stats.boards.push(b); return b; },
   createRectangle() { stats.rects++; return makeShape('rect'); },
   createEllipse() { stats.ellipses++; return makeShape('ellipse'); },
-  createText(s) { stats.texts++; const t = makeShape('text'); t.characters = String(s); return t; },
+  createText(s) { stats.texts++; stats.textList.push(String(s)); const t = makeShape('text'); t.characters = String(s); return t; },
   createShapeFromSvg() { stats.svgImports++; return makeShape('svg-group'); },
   group(shapes, name) { stats.groups++; return { kind: 'group', name, shapes }; },
 };
 
-const code = fs.readFileSync(path.join(__dirname, '..', 'plugin', 'dist', 'plugin.js'), 'utf8');
+const code = fs.readFileSync(path.join(__dirname, '..', 'penpot-plugin', 'plugin.js'), 'utf8');
 new Function(code)();
 
 const assert = (cond, msg) => { if (!cond) { console.error('FAIL:', msg); process.exitCode = 1; } else { console.log('ok:', msg); } };
@@ -65,11 +65,18 @@ const assert = (cond, msg) => { if (!cond) { console.error('FAIL:', msg); proces
 assert(stats.colorStyles === 33, `цветовых стилей: ${stats.colorStyles}`);
 assert(stats.typoStyles === 10, `текстовых стилей: ${stats.typoStyles}`);
 // Борды
-assert(stats.boards.length === 149, `бордов/фреймов: ${stats.boards.length} (3 контента + 145 экранов + Handoff)`);
+assert(stats.boards.length === 151, `бордов/фреймов: ${stats.boards.length} (3 контента + 145 экранов + E-53o offline + Handoff + диагностика)`);
 assert(stats.boards[0].name === '01_Foundations / audit', 'борд «01_Foundations / audit»');
 assert(stats.boards[1].name === '02_Components / UI-kit', 'борд «02_Components / UI-kit»');
 assert(stats.boards[2].name === '03_Patterns / Domain', 'борд «03_Patterns / Domain»');
-assert(stats.boards[148] && stats.boards[148].name === '13_Handoff / handoff', 'борд «13_Handoff / handoff» (последним)');
+assert(stats.boards[148] && stats.boards[148].name === 'E-85 Критическая ошибка сессии / 390', 'борд «E-85 Критическая ошибка сессии / 390» (последний из состояний)');
+assert(stats.boards[149] && stats.boards[149].name === '13_Handoff / handoff', 'борд «13_Handoff / handoff»');
+assert(stats.boards[150] && stats.boards[150].name === '00_Diagnostics / run', 'борд «00_Diagnostics / run» (последним)');
+const offBoards = stats.boards.filter(b => /^E-53o /.test(b.name));
+assert(offBoards.length === 1, 'offline-фрейм E-53o: 1 шт. (/ 390)');
+const i53b = stats.boards.findIndex(b => b.name === 'E-53 Прохождение · не выбрано / 390');
+assert(i53b >= 0 && stats.boards[i53b + 1] && stats.boards[i53b + 1].name === 'E-53o Нет соединения / 390', 'E-53o идёт сразу после «E-53 · не выбрано» (серия TMA)');
+assert(stats.textList.some(c => c.includes('координаты')), 'диагностика проверяет координаты');
 const screenBoards = stats.boards.filter(b => /^E-\d\d /.test(b.name));
 assert(screenBoards.length === 145, `фреймов экранов: ${screenBoards.length} (…+ 18 состояний E-80…E-85 ×3)`);
 const simBoards = screenBoards.filter(b => /^E-2\d /.test(b.name));

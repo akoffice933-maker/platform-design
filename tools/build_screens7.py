@@ -42,7 +42,7 @@ TMA_CSS = '''
 .tma .lnk8{color:#60A5FA;font-size:12px;font-weight:600;text-decoration:none}
 .tma .pbar2{margin-bottom:12px}
 .tma .mbtn{height:48px;border-radius:12px;background:var(--acc);color:#fff;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center}
-.tma .mbtn.off{background:#1E293B;color:#CBD5E1}
+.tma .mbtn.off{background:#1E293B;color:#CBD5E1}\n.obadge{width:88px;height:88px;border-radius:50%;background:#1E293B;display:flex;align-items:center;justify-content:center}
 .mzone{flex:none;height:80px;padding:8px 16px 0;background:#0B1220}
 .hind{width:134px;height:5px;border-radius:3px;background:rgba(248,250,252,.35);margin:8px auto 0}
 .nzone{flex:none;height:80px;background:#111827}
@@ -166,6 +166,19 @@ def e53(selected):
                '<p class="sub8" style="text-align:center;margin:14px 0 0">' + hint + '</p></div>')
     return tma_shell('Дыхание 4-7-8', content, ('main', 'Ответить', selected))
 
+def e53o():
+    content = ('<div class="pbar2"><span>ШАГ 3 ИЗ 6</span><i><b style="width:50%"></b></i></div>'
+               '<div style="display:flex;justify-content:center;margin-top:28px"><span class="obadge">' + icon('wifi-off', 36, '#FDE68A') + '</span></div>'
+               '<h1 style="text-align:center;font-size:18px;margin:22px 0 0">Нет соединения</h1>'
+               '<p class="sub8" style="text-align:center;margin:12px 0 0">Похоже, связь пропала. Проверьте интернет<br>и повторите попытку.</p>'
+               '<div class="ccard" style="display:flex;gap:12px;align-items:flex-start;margin-top:24px">'
+               + icon('circle-check', 18, '#4ADE80') +
+               '<div><b style="font-size:13px">Прогресс не потерян</b>'
+               '<p class="sub8" style="margin:4px 0 0">Шаг 3 из 6 · ответы синхронизируются сами</p></div></div>'
+               '<p style="text-align:center;margin:42px 0 0"><a class="lnk8" href="#">Продолжить офлайн</a></p>')
+    return tma_shell('Дыхание 4-7-8', content, ('main', 'Повторить', True))
+
+
 def e54():
     stats = [('clock', '4:32', 'время'), ('target', '6/6', 'шаги'), ('zap', '+1', 'серия')]
     srow = ''.join('<div class="card8">' + icon(st[0], 18, '#60A5FA') + '<b>' + st[1] + '</b><span>' + st[2] + '</span></div>'
@@ -259,6 +272,8 @@ SCREENS = [
      'Доступные игры со статусами: в процессе / новое / завершена (ТЗ E-52).'),
     ('E-53', 'Прохождение шага', [('выбрано', e53(True)), ('не выбрано · MainButton disabled', e53(False))],
      'Шаг-choice с прогрессом. Справа — состояние без выбора: нативная MainButton Telegram неактивна (ТЗ E-53).'),
+    ('E-53o', 'Нет соединения', [('offline · нет сети', e53o())],
+     'Экран offline: шаг и ответы сохранены, MainButton «Повторить», переход «Продолжить офлайн»; синхронизация при появлении сети (docs/07, P1).'),
     ('E-54', 'Результат', [('TMA · 390', e54())],
      'Статистика сессии, динамика самооценки тревоги, автоотправка психологу (ТЗ E-54).'),
     ('E-55', 'Дневник', [('TMA · 390', e55())],
@@ -287,7 +302,7 @@ doc = ('<!DOCTYPE html>\n<html lang="ru"><head><meta charset="UTF-8"><meta name=
        '<span class="chip-top">● Platform Design</span> '
        '<span class="chip-top" style="background:#F7F8FA;color:#475569;border-color:#E2E8F0">Итерация 7: Telegram Mini App — готово</span>\n'
        '<h1 class="pt">07 · TMA E-50…E-57</h1>\n'
-       '<p class="lead">Клиентский Mini App в Telegram: онбординг по deep-link, главная с серией и чек-ином, игры, прохождение шагов, результат, дневник настроения, прогресс и профиль. Все экраны 390×844 в тёмной теме (ТЗ 11.1) с safe areas: шапка Telegram 56px сверху, MainButton / BottomNav 80px снизу. В Penpot — 9 фреймов плагина v0.7.</p>\n'
+       '<p class="lead">Клиентский Mini App в Telegram: онбординг по deep-link, главная с серией и чек-ином, игры, прохождение шагов, результат, дневник настроения, прогресс и профиль. Все экраны 390×844 в тёмной теме (ТЗ 11.1) с safe areas: шапка Telegram 56px сверху, MainButton / BottomNav 80px снизу. В Penpot — 10 фреймов плагина (включая offline E-53o).</p>\n'
        '<nav class="toc">' + toc + '</nav>\n</header>\n'
        + '\n'.join(parts) +
        '\n<footer style="text-align:center;color:#94A3B8;font-size:13px;margin-top:40px">Platform Design · TMA v1.0 · плагин v0.7 · источник: tokens/design-tokens.json</footer>\n'

@@ -26,12 +26,17 @@
 ```
 ├── penpot-plugin/        # ХОСТИНГ ДЛЯ PENPOT: manifest.json + plugin.js + icon.svg
 ├── plugin-src/           # Исходники плагина (TypeScript)
-├── tokens/               # design-tokens.json (DTCG) + tokens.css — источник истины
+├── tokens/               # design-tokens.json (DTCG) + tokens.css + motion.css + tailwind-пресет
 ├── docs/                 # 01 установка Penpot · 02 workflow · 03 чек-листы
-│                         # 04 юристу (152-ФЗ) · 05 методисту (тексты)
+│                         # 04 юристу (152-ФЗ) · 05 методисту · 06 матрица ТЗ
+│                         # 07 план доработок · 08 фронтенду · 09 схема сценария
+│                         # 10 motion · 11 графики
 ├── foundations/ uikit/ patterns/ screens/   # 10 HTML-спек (открываются на Pages)
-├── icons/lucide/         # 75 иконок Lucide v0.544
-└── tools/                # Генераторы спек + смоук-тест (см. tools/README.md)
+├── schemas/ scenarios/   # JSON-контракт сценария + эталон «Тревога перед экзаменом»
+├── storybook/            # Заготовка: 5 компонентов в живом коде (npm run storybook)
+├── charts/               # RadarSkills.jsx (recharts) + SVG-референс радара
+├── icons/lucide/         # 76 иконок Lucide v0.544
+└── tools/                # Генераторы спек, валидатор сценариев, смоук-тест
 ```
 
 ## Спеки (после включения Pages доступны по ссылкам)

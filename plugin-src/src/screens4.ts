@@ -1,6 +1,6 @@
 // Telegram Mini App (Итерация 7 ТЗ, раздел 5.6): E-50…E-57 — клиент в Telegram.
 // Только 390, тёмная тема по умолчанию (ТЗ 11.1), safe areas:
-// сверху 56px — шапка Telegram, снизу 80px — MainButton или BottomNav. 9 фреймов.
+// сверху 56px — шапка Telegram, снизу 80px — MainButton или BottomNav. 10 фреймов (+offline E-53o).
 
 declare const penpot: any;
 
@@ -269,6 +269,32 @@ function e53body(f: any, selected: boolean): void {
 function e53(f: any): void { e53body(f, true); }
 function e53b(f: any): void { e53body(f, false); }
 
+
+// ---------------------------------------------------------------------------
+// E-53o Нет соединения (offline)
+// ---------------------------------------------------------------------------
+
+function e53o(f: any): void {
+  tgHeader(f, 'Дыхание 4-7-8');
+  tmaProgress(f, 24, 72, 3, 6); // прогресс сохранён
+  const ring = makeEllipse(f, (W - 88) / 2, 152, 88, 88, '#1E293B');
+  ring.name = 'offline-badge';
+  ic(f, 'wifi-off', (W - 36) / 2, 178, 36, '#FDE68A');
+  const t1 = txt(f, 0, 268, 'Нет соединения', 18, 700, C.D_INK);
+  centerTxt(t1, 0, W);
+  const s1 = txt(f, 0, 302, 'Похоже, связь пропала. Проверьте интернет', 13, 400, C.D_INK2);
+  centerTxt(s1, 0, W);
+  const s2 = txt(f, 0, 324, 'и повторите попытку.', 13, 400, C.D_INK2);
+  centerTxt(s2, 0, W);
+  card(f, 24, 374, W - 48, 84, 'offline-progress-card');
+  ic(f, 'circle-check', 40, 392, 18, C.SUCCESS);
+  txt(f, 66, 390, 'Прогресс не потерян', 13, 600, C.D_INK);
+  txt(f, 66, 412, 'Шаг 3 из 6 · ответы синхронизируются сами', 11, 400, C.D_INK2);
+  const lk = txt(f, 0, 722, 'Продолжить офлайн', 13, 500, '#60A5FA');
+  centerTxt(lk, 0, W);
+  mainBtn(f, 'Повторить', true);
+}
+
 // ---------------------------------------------------------------------------
 // E-54 Результат
 // ---------------------------------------------------------------------------
@@ -475,6 +501,7 @@ const SCREENS4: Screen4Def[] = [
   { code: 'E-52', title: 'Игры', draw: e52 },
   { code: 'E-53', title: 'Прохождение', draw: e53 },
   { code: 'E-53', title: 'Прохождение · не выбрано', draw: e53b },
+  { code: 'E-53o', title: 'Нет соединения', draw: e53o },
   { code: 'E-54', title: 'Результат', draw: e54 },
   { code: 'E-55', title: 'Дневник', draw: e55 },
   { code: 'E-56', title: 'Прогресс', draw: e56 },

@@ -1,0 +1,21 @@
+{
+  "name": "platform-ui-stories",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Storybook-заготовка Platform Design: 5 ключевых компонентов по спеке uikit/02-components.html на дизайн-токенах",
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build": "storybook build"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "^8.3.6",
+    "@storybook/react-vite": "^8.3.6",
+    "storybook": "^8.3.6",
+    "vite": "^5.4.8"
+  }
+}
