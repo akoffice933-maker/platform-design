@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Design · 10 Handoff · v1.0</title>
+<style>
+:root{--bg:#fff;--bg2:#F7F8FA;--bg3:#EEF0F4;--ink:#0F172A;--ink2:#475569;--ink3:#94A3B8;--bd:#E2E8F0;--acc:#2563EB;--ok:#16A34A;--err:#DC2626;--warn:#F59E0B;--r:12px;--sh:0 4px 12px rgba(0,0,0,.08);--f:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--f);background:#EEF1F6;color:var(--ink);font-size:15px}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 24px 120px}
+header.page{padding:32px 0 8px}
+.chip-top{display:inline-flex;background:#EEF2FF;color:var(--acc);border:1px solid #C7D7FE;border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:600}
+h1.pt{font-size:34px;margin:14px 0 6px}.lead{color:var(--ink2);max-width:840px}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+nav.toc a{font-size:13px;color:var(--ink2);background:#fff;border:1px solid var(--bd);border-radius:9999px;padding:5px 12px;text-decoration:none}
+section.scr{background:#F7F8FA;border:1px solid var(--bd);border-radius:16px;padding:28px;margin-top:28px}
+.scr>h2{font-size:21px}.scr>h2 .tok{font-size:11px;color:var(--ink3);font-family:ui-monospace,monospace;font-weight:500;margin-left:8px}
+.scr>.note{font-size:13px;color:var(--ink2);margin-top:4px;max-width:880px}
+.frames{display:flex;flex-direction:column;gap:20px;margin-top:18px}
+.frow{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.fbox{background:#DDE3EC;border-radius:14px;padding:10px;flex:none}
+.fbox .flabel{font-family:ui-monospace,monospace;font-size:11px;color:#475569;margin:0 0 6px 4px}
+.clip{overflow:hidden;border-radius:8px;box-shadow:0 10px 30px rgba(15,23,42,.18)}
+.screen{container-type:inline-size;position:relative;background:var(--bg);display:flex;width:100%;overflow:hidden}
+.screen.d{height:780px}.screen.t{width:768px;height:1024px}.screen.m{width:390px}
+.sb{display:flex;flex-direction:column;width:240px;background:var(--bg2);border-right:1px solid var(--bd);flex:none}
+.sb .logo{display:flex;align-items:center;gap:10px;font-weight:700;padding:20px 24px 12px}
+.mark{width:24px;height:24px;border-radius:8px;background:var(--acc);display:inline-block;flex:none}
+.sb nav{display:flex;flex-direction:column;gap:2px;padding:12px}
+.sb nav a{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:10px;color:var(--ink2);font-size:14px;text-decoration:none}
+.sb nav a.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--acc)}
+.sb nav a svg{color:var(--ink3)}.sb nav a.on svg{color:var(--acc)}
+.sb .ucard{margin-top:auto;display:flex;gap:10px;align-items:center;padding:16px 20px;border-top:1px solid var(--bd)}
+.ava{width:32px;height:32px;border-radius:50%;background:#7C3AED;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex:none}
+.sbi{display:none;flex-direction:column;width:64px;background:var(--bg2);border-right:1px solid var(--bd);align-items:center;padding:16px 0;gap:6px;flex:none}
+.sbi a{padding:10px;border-radius:10px;color:var(--ink3)}.sbi a.on{background:#fff;color:var(--acc)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topb{display:flex;align-items:center;gap:14px;height:64px;border-bottom:1px solid var(--bd);padding:0 24px;flex:none}
+.topb b{font-size:18px}.topb .grow{flex:1}
+.mnav{display:none;position:absolute;left:0;right:0;bottom:0;height:64px;background:#fff;border-top:1px solid var(--bd);z-index:5}
+.mnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9px;color:var(--ink3);text-decoration:none}
+.mnav a.on{color:var(--acc);font-weight:600}
+.content{flex:1;padding:22px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:9999px;font-family:var(--f);font-weight:600;font-size:14px;height:40px;padding:0 16px;cursor:pointer}
+.btn.sm{height:30px;font-size:12px;padding:0 12px}
+.btn.primary{background:var(--acc);color:#fff}.btn.secondary{background:#fff;border:1px solid var(--bd);color:var(--ink)}
+.btn.full{width:100%}.btn.disabled{background:var(--bg3);color:var(--ink3);cursor:not-allowed}
+.lnk{color:var(--acc);font-weight:500;text-decoration:none;font-size:13px}
+.muted{color:var(--ink3)}.gr{color:#16A34A;font-weight:500;font-size:12px}.cap2{font-size:11px;letter-spacing:.05em;color:var(--ink3);font-weight:500}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.chead{display:flex;align-items:center;gap:10px;margin-bottom:10px}.chead b{font-size:15px}.chead>span{font-size:12px;color:var(--ink2);margin-left:auto}
+.cols{display:flex;gap:18px;align-items:flex-start}
+.col-l{flex:1.6;min-width:0}.col-r{flex:1;min-width:0}
+/* E-20 */
+.srch{display:flex;gap:16px;align-items:center;margin-bottom:14px}
+.sinp{flex:0 1 420px;height:40px;border:1px solid var(--bd);border-radius:8px;display:inline-flex;align-items:center;gap:8px;padding:0 12px;color:var(--ink3);font-size:14px;background:#fff}
+.fbtn{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:500;color:var(--ink2)}
+.cnt{margin-left:auto;color:var(--ink3);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:12px}
+.fchip{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:9999px;border:1px solid var(--bd);background:#fff;font-size:12px;font-weight:500;color:var(--ink2)}
+.fchip i{width:8px;height:8px;border-radius:50%}
+.fchip.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.sortrow{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink2);margin-bottom:14px}
+.sortrow .sb{border:1px solid var(--bd);border-radius:9999px;padding:3px 12px;background:#fff}
+.sortrow .sb.on{background:var(--bg3);color:var(--ink);font-weight:600}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.sccard{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.sccard b{font-size:15px}.sccard p{font-size:13px;color:var(--ink2);margin:6px 0}
+.sccard.locked{background:var(--bg2);box-shadow:none}
+.sccard.slim{display:flex;align-items:center;justify-content:space-between}
+.meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink3);margin:8px 0}
+.dots{display:inline-flex;gap:5px}.dots i{width:8px;height:8px;border-radius:50%;background:var(--bg3)}.dots i.on{background:var(--acc)}
+.tags{display:flex;gap:8px;margin:8px 0}
+.tag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:9999px;border:1px solid var(--bd);background:#fff;font-size:11px;font-weight:500;color:var(--ink2)}
+.tag i{width:8px;height:8px;border-radius:50%}
+.foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+/* E-21 */
+.back{color:var(--acc);font-weight:500;font-size:13px;text-decoration:none;display:block;margin-bottom:12px}
+.card.big{padding:22px}
+.card.big h1{font-size:22px;margin-bottom:10px}
+.card.big p{font-size:14px;color:var(--ink2);margin-bottom:12px}
+.meta2{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);margin:6px 0}
+.btns{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
+/* session */
+.sesscol{max-width:640px}
+.session{padding:18px}
+.session.dim,.hist.dim{opacity:.45;filter:grayscale(0.2)}
+.sp-top{display:flex;gap:12px;align-items:center}
+.sp-top b{font-size:13px}
+.pause{margin-left:auto;width:34px;height:34px;border:1px solid var(--bd);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--bg2)}
+.pbar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:10px 0 14px}
+.pbar i{display:block;height:100%;background:var(--acc)}
+.eic{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:10px;padding:8px 14px;width:190px;margin-bottom:14px}
+.eic b{font-size:14px}.eic span{font-size:11px;color:var(--err)}
+.eic .edot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--err)}
+.bub{background:var(--bg2);border-radius:12px;padding:10px 14px;font-size:14px;max-width:92%}
+.bub.right{background:var(--acc);color:#fff;margin-left:auto;max-width:86%}
+.bubmeta{display:flex;font-size:11px;margin:6px 0 12px}
+.emo{color:var(--err);font-weight:500;display:inline-flex;gap:5px;align-items:center}
+.tm{margin-left:auto;color:var(--ink3)}
+.ao{border:1px solid var(--bd);border-radius:12px;padding:9px 14px;margin-top:10px;background:#fff}
+.ao .ao-txt{font-size:13px;display:block}
+.tech{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:9999px;border:1px solid var(--bd);background:#fff;font-size:11px;font-weight:500;color:#1D4ED8;margin-top:8px}
+.tech i{width:8px;height:8px;border-radius:50%}
+.own{border:1px dashed var(--ink3);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--ink3);margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+.beta{background:#EFF6FF;color:var(--acc);border-radius:9999px;padding:2px 10px;font-size:11px;font-weight:600}
+.hist .hb{background:var(--bg2);border-radius:8px;padding:8px 12px;font-size:11px;margin-bottom:8px}
+.hist .hb.r{background:#EFF6FF;color:#1D4ED8;margin-left:24px}
+.hist .hb.l{margin-right:24px}
+.ta{border:1px solid var(--bd);border-radius:10px;padding:12px 14px;min-height:96px;display:flex;flex-direction:column;justify-content:space-between;margin-top:12px}
+.ta.focus{border-color:var(--acc);border-width:2px}
+.ta .ph{color:var(--ink3);font-size:14px}
+.ta .cnt2{align-self:flex-end;color:var(--ink3);font-size:11px}
+.ta-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+/* overlay/modal */
+.overlay{display:none}
+.pmodal{display:none}
+@container (min-width: 1px) { }
+/* renders overlay inside screen: */
+.screen .overlay{position:absolute;inset:0;background:rgba(15,23,42,.5);display:block;z-index:8}
+.screen .pmodal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:380px;background:#fff;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.25);padding:24px;display:block;z-index:9}
+.screen .pmodal h1{font-size:20px;margin-bottom:10px}
+.screen .pmodal p{font-size:14px;color:var(--ink2);margin-bottom:16px}
+.screen .pmodal .btn{margin-bottom:10px}
+/* E-25 */
+.result .bigscore{font-size:52px;font-weight:700}
+.scorerow{display:flex;align-items:center;gap:10px;margin:6px 0}
+.of100{font-size:18px;color:var(--ink3);font-weight:600}
+.upbadge{display:inline-flex;gap:6px;align-items:center;background:#DCFCE7;color:#166534;border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:600;margin-left:14px}
+.points{font-size:13px;color:var(--ink2);font-weight:500}
+.achrow{display:flex;gap:10px;margin-top:12px}
+.ach{display:inline-flex;gap:7px;align-items:center;background:#FEF3C7;color:#92400E;border-radius:9999px;padding:6px 12px;font-size:12px;font-weight:500}
+.warnbanner{display:flex;gap:14px;background:#FFFBEB;border-color:#FDE68A;border-left:4px solid var(--warn)}
+.warnbanner b{color:#92400E;font-size:13px;display:block}
+.warnbanner span{font-size:12px;color:#B45309}
+.radar-flex{display:flex;gap:16px;align-items:center}
+.skillbars{flex:1;display:flex;flex-direction:column;gap:11px;min-width:120px}
+.sbrow{font-size:12px}
+.sbrow .lab{color:var(--ink2)}
+.sbrow .v{margin-left:8px;font-weight:600}
+.sbrow em{color:#16A34A;font-style:normal;font-size:11px;margin-left:6px}
+.sbrow i{display:block;height:6px;background:var(--bg3);border-radius:3px;margin-top:4px}
+.mom{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--bd)}
+.mom:last-of-type{border-bottom:none}
+.mom b{font-size:12px;display:block}.mom span{font-size:11px;color:var(--ink2)}
+.mom>div{flex:1}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+/* E-26 */
+.pt2{font-size:20px;margin-bottom:14px}
+.okc{border-left:4px solid var(--ok)}.impc{border-left:4px solid var(--warn)}
+.alt{background:#F0FDF4;border:2px solid var(--ok);border-radius:12px;padding:12px 16px}
+.alt>span:first-child{font-size:13px;display:block;margin-bottom:4px}
+/* E-27 */
+.tablec{padding:6px 16px}
+.thead{display:flex;gap:12px;padding:12px 4px;font-size:11px;letter-spacing:.05em;color:var(--ink3);font-weight:500;border-bottom:1px solid var(--bd)}
+.thead span:first-child{width:110px}.thead span:nth-child(2){flex:1}.thead .tc{width:70px}.thead .tr{margin-left:auto}
+.trow{display:flex;gap:12px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--bd);font-size:13px}
+.trow .tm{color:var(--ink3);font-size:12px;width:110px;flex:none}
+.trow b{flex:1;font-size:13px}
+.trow .tm2{color:var(--ink2);font-size:12px;width:60px}
+.score{border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700}
+.score.g{background:#DCFCE7;color:#166534}.score.y{background:#FEF9C3;color:#854D0E}.score.o{background:#FFEDD5;color:#9A3412}
+.trow .btn{margin-left:auto}
+.pager{display:flex;gap:8px;align-items:center;padding:14px 4px 8px;font-size:12px;color:var(--ink2)}
+.pg{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px}
+.pg.on{background:var(--acc);color:#fff;font-weight:600}
+.radar-c{display:flex;justify-content:center}
+/* ---------- container queries ---------- */
+@container (max-width: 900px) {
+  .sb{display:none}.sbi{display:flex}
+  .cols{flex-direction:column}.col-l,.col-r{width:100%}
+  .grid3{grid-template-columns:1fr 1fr}
+  .sortrow{display:none}
+  .histcol{display:none}
+  .content{padding:18px}
+}
+@container (max-width: 500px) {
+  .sbi{display:none}
+  .mnav{display:flex}
+  .grid3{grid-template-columns:1fr}
+  .content{padding:14px 14px 80px}
+  .fbtn,.cnt{display:none}
+  .sinp{flex:1}
+  .radar-flex{flex-direction:column}
+  .pmodal{width:calc(100% - 32px)}
+  .thead .tc,.thead span:nth-child(4){display:none}
+  .trow .tm2,.trow .score{display:none}
+  .ctas .btn{flex:1}
+}
+
+.handgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:14px}
+.sw{background:#fff;border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.sw .c{height:44px}
+.sw .m{padding:8px 10px}
+.sw b{font-size:11px;display:block;font-family:ui-monospace,monospace}
+.sw span{font-size:10px;color:var(--ink3);display:block;margin-top:2px;line-height:1.35}
+.typrow{display:flex;gap:18px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--bd)}
+.typrow:last-child{border-bottom:none}
+.typrow .tn{width:130px;flex:none;font-size:11px;font-weight:600;color:var(--acc);font-family:ui-monospace,monospace}
+.typrow .tm{margin-left:auto;font-size:11px;color:var(--ink3);flex:none}
+.spacebar{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.spacebar>div{text-align:center}
+.spacebar i{display:block;background:var(--acc);border-radius:4px;height:14px}
+.radrow{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.radrow>div{text-align:center}
+.radrow i{display:block;width:76px;height:30px;background:var(--bg3);border:1px solid var(--bd)}
+.shrow{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}
+.shrow .sh{width:150px;height:52px;background:#fff;border-radius:10px;display:flex;align-items:flex-end;justify-content:center;font-size:11px;color:var(--ink2);padding-bottom:6px}
+.motioncards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.mcard{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px}
+.mcard b{font-size:22px;color:var(--acc);display:block}
+.mcard .mn{font-size:11px;font-weight:600;color:var(--acc2);margin-top:2px}
+.mcard p{font-size:12px;color:var(--ink2);margin-top:8px}
+.mcard code{font-size:10px;color:var(--ink3);display:block;margin-top:8px;font-family:ui-monospace,monospace}
+pre{background:#0F172A;color:#E2E8F0;border-radius:12px;padding:18px;font-size:12px;line-height:1.6;overflow:auto;font-family:ui-monospace,monospace}
+pre .cm{color:#64748B}
+pre .k{color:#93C5FD}
+.clog{display:flex;gap:14px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--bd);font-size:13px}
+.clog:last-child{border-bottom:none}
+.clog .n{width:26px;height:26px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink2);flex:none}
+.clog:last-child .n{background:var(--ok);color:#fff}
+.clog b{width:270px;flex:none}
+.clog span{color:var(--ink2)}
+.inv{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:14px}
+.inv>div{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px;text-align:center}
+.inv b{font-size:26px;display:block;color:var(--acc)}
+.inv span{font-size:11px;color:var(--ink3)}
+.cl{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:7px 0}
+.cl i{width:18px;height:18px;border-radius:5px;background:var(--ok);flex:none;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:11px}
+.cl.open i{background:#fff;border:1px solid var(--bd);color:transparent}
+.namet{display:flex;gap:16px;padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px}
+.namet:last-child{border-bottom:none}
+.namet b{width:200px;flex:none}
+.namet code{font-family:ui-monospace,monospace;color:var(--ink2);font-size:12px}
+</style></head><body>
+<div class="wrap">
+<header class="page">
+<span class="chip-top">● Platform Design</span> <span class="chip-top" style="background:#F0FDF4;color:#166534;border-color:#BBF7D0">Итерация 10: Handoff — проект завершён ✓</span>
+<h1 class="pt">10 · Handoff Kit</h1>
+<p class="lead">Финальная передача в разработку: 33+5 цветовых и 10 текстовых токенов, шкалы отступов/радиусов/теней, спека анимаций (150/250/400/500 мс), Tailwind-маппинг, паттерны именования, changelog всех 10 итераций и чек-лист приёмки. Всё выполнено по ТЗ v1.0: 2 продукта, 3 контекста, 6 ролей, 145 экранов E-01…E-85, 106 компонентов, 6 кликабельных потоков — в одном проекте Penpot.</p>
+</header>
+<section class="scr"><h2>1 · Процесс передачи</h2><div class="inv"><div><b style="font-size:14px">Inspect</b><span>Выделить слой → правая панель: размеры и привязанные стили color/… text/…</span></div><div><b style="font-size:14px">Токены</b><span>design-tokens.json (DTCG) + tokens.css; Tailwind-маппинг — раздел 5</span></div><div><b style="font-size:14px">Анимации</b><span>motion 150/250/400/500 + кривые — раздел 4</span></div><div><b style="font-size:14px">Прототипы</b><span>Present: кликабельные потоки 7.1–7.6</span></div><div><b style="font-size:14px">Приёмка</b><span>Чек-листы docs/03; WCAG — foundations/01 #wcag</span></div><div><b style="font-size:14px">Именование</b><span>Паттерны раздела 6 — искать и фильтровать слои</span></div></div></section>
+<section class="scr"><h2>2 · Цветовые токены — 33 стиля</h2><p class="note">Light-тема: bg · text · border · accent · semantic · emotion (low/mid/high) · skill (8 навыков). Все стили уже в библиотеке Penpot.</p><div class="handgrid"><div class="sw"><div class="c" style="background:#FFFFFF;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/bg/primary</b><span>#FFFFFF · Основной фон</span></div></div><div class="sw"><div class="c" style="background:#F7F8FA;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/bg/secondary</b><span>#F7F8FA · Фон карточек, секций</span></div></div><div class="sw"><div class="c" style="background:#EEF0F4;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/bg/tertiary</b><span>#EEF0F4 · Ховеры, разделители</span></div></div><div class="sw"><div class="c" style="background:#0F172A;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/bg/inverse</b><span>#0F172A · Тёмный фон (опц.)</span></div></div><div class="sw"><div class="c" style="background:#0F172A;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/text/primary</b><span>#0F172A · Заголовки, основной текст</span></div></div><div class="sw"><div class="c" style="background:#475569;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/text/secondary</b><span>#475569 · Подписи</span></div></div><div class="sw"><div class="c" style="background:#94A3B8;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/text/tertiary</b><span>#94A3B8 · Плейсхолдеры, disabled</span></div></div><div class="sw"><div class="c" style="background:#FFFFFF;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/text/inverse</b><span>#FFFFFF · Текст на тёмном</span></div></div><div class="sw"><div class="c" style="background:#E2E8F0;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/border/default</b><span>#E2E8F0 · Границы</span></div></div><div class="sw"><div class="c" style="background:#2563EB;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/border/focus</b><span>#2563EB · Фокус (обводка 2px, WCAG)</span></div></div><div class="sw"><div class="c" style="background:#2563EB;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/accent/primary</b><span>#2563EB · CTA, ссылки</span></div></div><div class="sw"><div class="c" style="background:#1D4ED8;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/accent/primary-hover</b><span>#1D4ED8 · Ховер CTA</span></div></div><div class="sw"><div class="c" style="background:#7C3AED;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/accent/secondary</b><span>#7C3AED · Вторичный акцент</span></div></div><div class="sw"><div class="c" style="background:#16A34A;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/semantic/success</b><span>#16A34A · Успех</span></div></div><div class="sw"><div class="c" style="background:#F59E0B;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/semantic/warning</b><span>#F59E0B · Предупреждение</span></div></div><div class="sw"><div class="c" style="background:#DC2626;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/semantic/error</b><span>#DC2626 · Ошибка</span></div></div><div class="sw"><div class="c" style="background:#0EA5E9;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/semantic/info</b><span>#0EA5E9 · Инфо</span></div></div><div class="sw"><div class="c" style="background:#DC2626;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/emotion/low</b><span>#DC2626 · Эмоция 0–3</span></div></div><div class="sw"><div class="c" style="background:#F59E0B;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/emotion/mid</b><span>#F59E0B · Эмоция 4–6</span></div></div><div class="sw"><div class="c" style="background:#16A34A;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/emotion/high</b><span>#16A34A · Эмоция 7–10</span></div></div><div class="sw"><div class="c" style="background:#2563EB;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/skill/active-listening</b><span>#2563EB · Навык: активное слушание</span></div></div><div class="sw"><div class="c" style="background:#7C3AED;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/skill/empathy</b><span>#7C3AED · Навык: эмпатия</span></div></div><div class="sw"><div class="c" style="background:#0891B2;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/skill/boundaries</b><span>#0891B2 · Навык: границы</span></div></div><div class="sw"><div class="c" style="background:#DB2777;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/skill/emotion-work</b><span>#DB2777 · Навык: работа с эмоциями</span></div></div><div class="sw"><div class="c" style="background:#65A30D;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/skill/structuring</b><span>#65A30D · Навык: структурирование</span></div></div><div class="sw"><div class="c" style="background:#EA580C;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/skill/resistance</b><span>#EA580C · Навык: работа с сопротивлением</span></div></div><div class="sw"><div class="c" style="background:#0EA5E9;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/skill/questioning</b><span>#0EA5E9 · Навык: вопрошание</span></div></div><div class="sw"><div class="c" style="background:#9333EA;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/skill/reflection</b><span>#9333EA · Навык: рефлексия</span></div></div></div></section>
+<section class="scr"><h2>2.1 · Тёмная тема — 5 токенов (ТЗ 11.1)</h2><p class="note">Обязательна для клиентских экранов и Telegram Mini App: фоны #0B1220/#111827, текст #F8FAFC/#CBD5E1, границы #1F2937.</p><div class="handgrid"><div class="sw"><div class="c" style="background:#0B1220;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/dark/bg/primary</b><span>#0B1220 · Основной фон (dark)</span></div></div><div class="sw"><div class="c" style="background:#111827;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/dark/bg/secondary</b><span>#111827 · Фон карточек (dark)</span></div></div><div class="sw"><div class="c" style="background:#F8FAFC;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/dark/text/primary</b><span>#F8FAFC · Основной текст (dark)</span></div></div><div class="sw"><div class="c" style="background:#CBD5E1;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/dark/text/secondary</b><span>#CBD5E1 · Подписи (dark)</span></div></div><div class="sw"><div class="c" style="background:#1F2937;border-bottom:1px solid var(--bd)"></div><div class="m"><b>color/dark/border/default</b><span>#1F2937 · Границы (dark)</span></div></div></div></section>
+<section class="scr"><h2>3 · Типографика — Inter, 10 стилей</h2><p class="note">Коды доступа — JetBrains Mono. Шкала 40→12, без промежуточных значений.</p><div class="card" style="padding:8px 20px"><div class="typrow"><span class="tn">text/display</span><span style="font-size:34px;font-weight:700;line-height:1.2">Симуляция консультации</span><span class="tm">40/48 · 700 · Inter · Hero</span></div><div class="typrow"><span class="tn">text/h1</span><span style="font-size:32px;font-weight:700;line-height:1.2">Библиотека сценариев</span><span class="tm">32/40 · 700 · Inter · Заголовок страницы</span></div><div class="typrow"><span class="tn">text/h2</span><span style="font-size:24px;font-weight:600;line-height:1.2">Активное слушание</span><span class="tm">24/32 · 600 · Inter · Заголовок секции</span></div><div class="typrow"><span class="tn">text/h3</span><span style="font-size:20px;font-weight:600;line-height:1.2">Карточка сценария</span><span class="tm">20/28 · 600 · Inter · Заголовок карточки</span></div><div class="typrow"><span class="tn">text/body-lg</span><span style="font-size:18px;font-weight:400;line-height:1.2">Клиент делится сложной ситуацией</span><span class="tm">18/28 · 400 · Inter · Крупный текст</span></div><div class="typrow"><span class="tn">text/body</span><span style="font-size:16px;font-weight:400;line-height:1.2">Основной текст интерфейса</span><span class="tm">16/24 · 400 · Inter · Основной текст</span></div><div class="typrow"><span class="tn">text/body-sm</span><span style="font-size:14px;font-weight:400;line-height:1.2">Подпись под полем ввода</span><span class="tm">14/20 · 400 · Inter · Подписи</span></div><div class="typrow"><span class="tn">text/caption</span><span style="font-size:12px;font-weight:500;line-height:1.2;letter-spacing:.06em">МЕТА · ШАГ 2 ИЗ 7</span><span class="tm">12/16 · 500 · Inter · Мета, лейблы</span></div><div class="typrow"><span class="tn">text/button</span><span style="font-size:16px;font-weight:600;line-height:1.2">Начать симуляцию</span><span class="tm">16/24 · 600 · Inter · Кнопки</span></div><div class="typrow"><span class="tn">text/mono</span><span style="font-size:14px;font-weight:400;line-height:1.2;font-family:ui-monospace,monospace">A7X9-Q2</span><span class="tm">14/20 · 400 · JetBrains Mono · Коды доступа (monospace)</span></div></div></section>
+<section class="scr"><h2>3.1 · Отступы · Радиусы · Тени</h2><p class="note">space/1–9 (4…96) · radius xs–full · shadow sm/md/lg.</p><div class="spacebar"><div><i style="width:4px"></i><span style="font-size:10px;color:var(--ink3)">space/1 · 4px</span></div><div><i style="width:8px"></i><span style="font-size:10px;color:var(--ink3)">space/2 · 8px</span></div><div><i style="width:12px"></i><span style="font-size:10px;color:var(--ink3)">space/3 · 12px</span></div><div><i style="width:16px"></i><span style="font-size:10px;color:var(--ink3)">space/4 · 16px</span></div><div><i style="width:24px"></i><span style="font-size:10px;color:var(--ink3)">space/5 · 24px</span></div><div><i style="width:32px"></i><span style="font-size:10px;color:var(--ink3)">space/6 · 32px</span></div><div><i style="width:48px"></i><span style="font-size:10px;color:var(--ink3)">space/7 · 48px</span></div><div><i style="width:64px"></i><span style="font-size:10px;color:var(--ink3)">space/8 · 64px</span></div><div><i style="width:96px"></i><span style="font-size:10px;color:var(--ink3)">space/9 · 96px</span></div></div><div class="radrow"><div><i style="border-radius:4px"></i><span style="font-size:10px;color:var(--ink3)">xs · 4px</span></div><div><i style="border-radius:8px"></i><span style="font-size:10px;color:var(--ink3)">sm · 8px</span></div><div><i style="border-radius:12px"></i><span style="font-size:10px;color:var(--ink3)">md · 12px</span></div><div><i style="border-radius:16px"></i><span style="font-size:10px;color:var(--ink3)">lg · 16px</span></div><div><i style="border-radius:24px"></i><span style="font-size:10px;color:var(--ink3)">xl · 24px</span></div><div><i style="border-radius:9999px"></i><span style="font-size:10px;color:var(--ink3)">full · 9999px</span></div></div><div class="shrow"><div class="sh" style="box-shadow:0px 1px 2px 0px rgba(0, 0, 0, 0.05)">sm</div><div class="sh" style="box-shadow:0px 4px 12px 0px rgba(0, 0, 0, 0.08)">md</div><div class="sh" style="box-shadow:0px 12px 32px 0px rgba(0, 0, 0, 0.12)">lg</div></div></section>
+<section class="scr"><h2>4 · Анимации — motion</h2><p class="note">Движение сдержанное (ТЗ 3.7): никаких пружинящих вылетов, кроме онбординга.</p><div class="motioncards"><div class="mcard"><b>150ms</b><span class="mn">motion/fast</span><p>Ховеры, фокус. Кривая: ease-out</p><code>cubic-bezier(0, 0, 0.58, 1)</code></div><div class="mcard"><b>250ms</b><span class="mn">motion/base</span><p>Переходы, модалки. Кривая: ease-in-out</p><code>cubic-bezier(0.42, 0, 0.58, 1)</code></div><div class="mcard"><b>400ms</b><span class="mn">motion/slow</span><p>Крупные переходы. Кривая: ease-in-out</p><code>cubic-bezier(0.42, 0, 0.58, 1)</code></div><div class="mcard"><b>500ms</b><span class="mn">motion/spring</span><p>Появление карточек. Кривая: cubic-bezier(0.34, 1.56, 0.64, 1)</p><code>cubic-bezier(0.34, 1.56, 0.64, 1)</code></div></div></section>
+<section class="scr"><h2>5 · Экспорт токенов → CSS / Tailwind</h2><p class="note">Источник истины — tokens/design-tokens.json (DTCG). Плагин создаёт те же значения стилями Penpot.</p><pre><span class="cm">&lt;!-- tokens/tokens.css --&gt;</span>
+:root {
+  --bg-primary: #FFFFFF;   --bg-secondary: #F7F8FA;  --bg-tertiary: #EEF0F4;
+  --text-primary: #0F172A; --text-secondary: #475569; --text-tertiary: #94A3B8;
+  --border-default: #E2E8F0; --accent-primary: #2563EB;
+  --success: #16A34A; --warning: #F59E0B; --error: #DC2626;
+  --dark-bg-primary: #0B1220; --dark-bg-secondary: #111827;
+}
+<span class="cm">// tailwind.config.js (фрагмент) — токены как CSS-переменные</span>
+module.exports = {
+  theme: { extend: {
+    colors: {
+      bg: { primary: 'var(--bg-primary)', secondary: 'var(--bg-secondary)' },
+      ink: { DEFAULT: 'var(--text-primary)', 2: 'var(--text-secondary)' },
+      accent: { DEFAULT: 'var(--accent-primary)', dark: { bg: 'var(--dark-bg-primary)', card: 'var(--dark-bg-secondary)' } },
+    },
+    borderRadius: { xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '24px' },
+    transitionDuration: { fast: '150ms', base: '250ms', slow: '400ms', spring: '500ms' },
+    fontFamily: { sans: ['Inter'], mono: ['JetBrains Mono'] },
+  } },
+}</pre></section>
+<section class="scr"><h2>6 · Именование</h2><p class="note">Паттерны обязательны — по ним ищутся слои и собирается документация.</p><div class="card" style="padding:8px 20px"><div class="namet"><b>Фреймы экранов</b><code>"E-XX Название / 1440 · 768 · 390" → пример: E-22 Сессия / 768</code></div><div class="namet"><b>Компоненты</b><code>"ComponentName / Variant / State" → пример: Button / primary / hover</code></div><div class="namet"><b>Цветовые стили</b><code>color/&lt;группа&gt;/&lt;роль&gt; → пример: color/accent/primary</code></div><div class="namet"><b>Текстовые стили</b><code>text/&lt;роль&gt; → пример: text/h2, text/mono</code></div><div class="namet"><b>Потоки прототипов</b><code>"7.X Название" → пример: «7.3 Клиент web: ссылка → игра → результат»</code></div></div></section>
+<section class="scr"><h2>7 · Changelog — все 10 итераций</h2><div class="card" style="padding:8px 20px"><div class="clog"><span class="n">1</span><b>1 · Foundations</b><span>33 цвета + 10 текстовых стилей в библиотеке Penpot, WCAG-аудит, сетки 4 брейкпоинтов, 75 иконок Lucide</span></div><div class="clog"><span class="n">2</span><b>2 · UI-kit</b><span>72 компонента со состояниями (Button ×30, Input, Select, Table, Toast…), демо тёмной темы</span></div><div class="clog"><span class="n">3</span><b>3 · Domain</b><span>34 доменных компонента: ScenarioCard, GameCard, ClientAccessCard, SkillRadarChart, CodeDisplay, BottomNav…</span></div><div class="clog"><span class="n">4</span><b>4 · Auth + дашборды</b><span>33 фрейма E-01…E-12 × 3 бп: лендинг, демо, вход/регистрация, онбординг, дашборды психолога и студента</span></div><div class="clog"><span class="n">5</span><b>5 · Симулятор</b><span>27 фреймов E-20…E-28: библиотека сценариев, сессия (чаты, эмоции), пауза, разбор с радарами, история</span></div><div class="clog"><span class="n">6</span><b>6 · Игры + клиент</b><span>30 фреймов E-30…E-44: выдача доступа (код/ссылка/QR), клиенты, доступы; клиентский сценарий в тёмной теме</span></div><div class="clog"><span class="n">7</span><b>7 · TMA</b><span>9 фреймов E-50…E-57 × 390: онбординг, главная, игры, шаги, результат, дневник, прогресс, профиль; safe area 56/80</span></div><div class="clog"><span class="n">8</span><b>8 · Админка + супервизия</b><span>28 фреймов E-60…E-73 × 1440/1280: верификация с SLA, аудит 152-ФЗ, разборы с таймкодами, отчёты</span></div><div class="clog"><span class="n">9</span><b>9 · Состояния + прототипы</b><span>18 фреймов E-80…E-85 × 3 бп (loading/empty/error/success/partial/critical) + 6 потоков, 15 связей</span></div><div class="clog"><span class="n">10</span><b>10 · Handoff</b><span>Этот документ + борд «13_Handoff»: токены, Tailwind, анимации, именование, чек-лист приёмки</span></div></div></section>
+<section class="scr"><h2>8 · Инвентарь — итоги проекта</h2><div class="inv"><div><b>149</b><span>бордов в Penpot</span></div><div><b>145</b><span>фреймов E-01…E-85</span></div><div><b>106</b><span>компонентов в Assets</span></div><div><b>6</b><span>кликабельных потоков</span></div><div><b>43</b><span>стилей (33+10)</span></div><div><b>9+1</b><span>HTML-спек в screens/</span></div></div><p class="note" style="margin-top:14px">Спеки: 01 foundations · 02 uikit · 03 domain · 04 auth-dashboard · 05 simulator · 06 games-client · 07 tma · 08 admin-supervision · 09 states-prototypes · 10 handoff. Плагин «Platform Builder v1.0» пересоздаёт всё идемпотентно.</p></section>
+<section class="scr"><h2>9 · Чек-лист приёмки (ТЗ 14)</h2><p class="note">Критерии приёмки ТЗ выполнены; открытые пункты — организационные (перенос фреймов в аккаунт заказчика, реальные тексты методиста, юрист по 152-ФЗ).</p><div class="card" style="padding:14px 20px"><div class="cl"><i>✓</i>Двухпродуктовая платформа: симулятор + игры для клиентов</div><div class="cl"><i>✓</i>3 контекста: web 1440/768/390, TMA 390 (safe area 56/80); админка 1440/1280</div><div class="cl"><i>✓</i>6 ролей: психолог, студент, супервизор, клиент, админ, гость</div><div class="cl"><i>✓</i>Foundations токенами (не сырые hex): цвет, текст, space, radius, shadow, motion</div><div class="cl"><i>✓</i>UI-kit + 20 доменных компонентов из ТЗ 4.2 — все в Assets</div><div class="cl"><i>✓</i>Экраны E-01…E-85 (разделы 5.1–5.9 ТЗ)</div><div class="cl"><i>✓</i>Тёмная тема обязательна: Mini App + клиентские экраны (ТЗ 11.1)</div><div class="cl"><i>✓</i>WCAG 2.1 AA: контраст проверен, риски задокументированы</div><div class="cl"><i>✓</i>6 кликабельных потоков (ТЗ 7.1–7.6) — Present в Penpot</div><div class="cl"><i>✓</i>Состояния данных loading/empty/error/success/partial/critical</div><div class="cl"><i>✓</i>Именование фреймов и компонентов по паттернам</div><div class="cl"><i>✓</i>Token JSON (DTCG) + tokens.css + Tailwind-маппинг</div><div class="cl"><i>✓</i>Вне скоупа (по ТЗ): иллюстрации сценариев, логотип, маркетинг-лендинг, email-шаблоны</div></div></section>
+<footer style="text-align:center;color:#94A3B8;font-size:13px;margin-top:40px">Platform Design · Handoff v1.0 · плагин v1.0 · источник: tokens/design-tokens.json (DTCG) · ТЗ v1.0 выполнено полностью</footer>
+</div></body></html>

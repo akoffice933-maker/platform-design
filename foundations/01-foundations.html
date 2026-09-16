@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Design · 01_Foundations · v1.0</title>
+<style>
+  :root{
+    --bg:#FFFFFF; --bg2:#F7F8FA; --bg3:#EEF0F4; --ink:#0F172A; --ink2:#475569; --ink3:#94A3B8;
+    --bd:#E2E8F0; --acc:#2563EB; --acc2:#7C3AED; --ok:#16A34A; --warn:#F59E0B; --err:#DC2626; --info:#0EA5E9;
+    --r-sm:8px; --r-md:12px; --r-lg:16px;
+    --sh-sm:0 1px 2px rgba(0,0,0,.05); --sh-md:0 4px 12px rgba(0,0,0,.08); --sh-lg:0 12px 32px rgba(0,0,0,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:var(--bg2);line-height:1.5;font-size:16px}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px 96px}
+  header.hero{background:#fff;border-bottom:1px solid var(--bd);padding:48px 0 32px;margin-bottom:40px}
+  .hero .wrap{padding-bottom:0}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#EEF2FF;color:#2563EB;border:1px solid #C7D7FE;border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:600;letter-spacing:.02em}
+  .chip.gray{background:var(--bg3);color:var(--ink2);border-color:var(--bd)}
+  h1.display{font-size:40px;line-height:48px;font-weight:700;margin:16px 0 8px}
+  .sub{font-size:18px;color:var(--ink2);max-width:720px}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  nav.toc a{font-size:14px;font-weight:500;color:var(--ink2);text-decoration:none;background:var(--bg2);border:1px solid var(--bd);border-radius:9999px;padding:6px 14px;transition:all .15s ease-out}
+  nav.toc a:hover{color:var(--acc);border-color:var(--acc);background:#EFF6FF}
+  section{background:#fff;border:1px solid var(--bd);border-radius:var(--r-lg);padding:40px;margin-top:32px;box-shadow:var(--sh-sm)}
+  h2{font-size:24px;line-height:32px;font-weight:600;display:flex;align-items:baseline;gap:12px}
+  h2 .tok{font-size:12px;font-weight:500;color:var(--ink3);font-family:ui-monospace,monospace}
+  .desc{color:var(--ink2);font-size:14px;margin-top:6px;max-width:760px}
+  h3{font-size:20px;font-weight:600;margin:32px 0 12px}
+  .grid{display:grid;gap:12px}
+  .g4{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  .card{border:1px solid var(--bd);border-radius:var(--r-md);overflow:hidden;background:#fff}
+  .card .sw{height:64px;border-bottom:1px solid var(--bd)}
+  .card .meta{padding:10px 12px}
+  .card .nm{font-size:12px;font-weight:600;font-family:ui-monospace,monospace}
+  .card .hx{font-size:11px;color:var(--ink3);font-family:ui-monospace,monospace}
+  .card .use{font-size:12px;color:var(--ink2);margin-top:4px;line-height:1.35}
+  .grouph{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:24px 0 10px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px}
+  th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:600;padding:8px 10px;border-bottom:2px solid var(--bd)}
+  td{padding:10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+  .mono{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px}
+  .pill{display:inline-block;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:600}
+  .pill.ok{background:#DCFCE7;color:#166534}
+  .pill.aa{background:#DBEAFE;color:#1E40AF}
+  .pill.aal{background:#E0E7FF;color:#3730A3}
+  .pill.fail{background:#FEE2E2;color:#991B1B}
+  .alert{display:flex;gap:12px;border-radius:var(--r-md);padding:14px 16px;font-size:14px;margin-top:16px;border:1px solid}
+  .alert b{display:block;margin-bottom:2px}
+  .alert.w{background:#FFFBEB;border-color:#FDE68A;color:#92400E}
+  .alert.i{background:#F0F9FF;border-color:#BAE6FD;color:#0C4A6E}
+  .alert.e{background:#FEF2F2;border-color:#FECACA;color:#991B1B}
+  .alert svg{flex:none;margin-top:2px}
+  .typeRow{display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:baseline;padding:16px 0;border-bottom:1px dashed var(--bd)}
+  .typeRow:last-child{border-bottom:none}
+  .typeSpec .nm{font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:var(--acc)}
+  .typeSpec .sp{font-size:12px;color:var(--ink3);margin-top:2px}
+  .spaceRow{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:center;padding:6px 0}
+  .spaceRow .lbl{font-family:ui-monospace,monospace;font-size:12px;color:var(--ink2)}
+  .bar{height:20px;background:var(--bg3);border:1px solid var(--bd);border-radius:4px;position:relative}
+  .bar span{position:absolute;left:calc(100% + 8px);top:0;font-size:11px;color:var(--ink3);white-space:nowrap;font-family:ui-monospace,monospace}
+  .radiusGrid,.shadowGrid{display:flex;flex-wrap:wrap;gap:24px}
+  .rbox{width:88px;text-align:center}
+  .rbox .sq{width:88px;height:88px;background:var(--bg2);border:2px solid var(--bd);margin-bottom:8px}
+  .rbox .cap{font-family:ui-monospace,monospace;font-size:11px;color:var(--ink2)}
+  .rbox .cap b{display:block;color:var(--ink);font-weight:600}
+  .shadowCard{width:180px;text-align:center}
+  .shadowCard .sq{width:180px;height:96px;background:#fff;border-radius:12px;margin-bottom:8px;border:1px solid #F1F5F9}
+  .shadowCard.s1 .sq{box-shadow:var(--sh-sm)}
+  .shadowCard.s2 .sq{box-shadow:var(--sh-md)}
+  .shadowCard.s3 .sq{box-shadow:var(--sh-lg)}
+  .motionDemo{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:16px}
+  .mcard{border:1px solid var(--bd);border-radius:var(--r-md);padding:16px;background:var(--bg2)}
+  .mcard .btn{display:inline-flex;align-items:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer}
+  .mcard.fast .btn{transition:background .15s ease-out,transform .15s ease-out}
+  .mcard.base .btn{transition:background .25s ease-in-out,transform .25s ease-in-out}
+  .mcard.slow .btn{transition:background .4s ease-in-out,transform .4s ease-in-out}
+  .mcard.spring .btn{transition:transform .5s cubic-bezier(.34,1.56,.64,1),background .25s}
+  .mcard .btn:hover{background:#1D4ED8}
+  .mcard.fast .btn:hover,.mcard.base .btn:hover,.mcard.slow .btn:hover{transform:translateY(-2px)}
+  .mcard.spring .btn:hover{transform:scale(1.12)}
+  .mcard .nm{font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--acc);margin-bottom:2px}
+  .mcard .sp{font-size:12px;color:var(--ink3);margin-bottom:12px}
+  .gridDiagrams{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:16px}
+  .gcard{border:1px solid var(--bd);border-radius:var(--r-md);padding:16px;background:var(--bg2)}
+  .gcard h4{font-size:14px;font-weight:600;margin-bottom:4px}
+  .gcard p{font-size:12px;color:var(--ink2);margin-bottom:10px;font-family:ui-monospace,monospace}
+  .gcard svg{width:100%;height:auto;display:block;border-radius:6px}
+  .iconGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:16px}
+  .icell{display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid var(--bd);border-radius:8px;padding:12px 4px;background:#fff}
+  .icell svg{width:24px;height:24px;stroke:var(--ink2)}
+  .icell span{font-size:10px;color:var(--ink3);font-family:ui-monospace,monospace;text-align:center;word-break:break-all}
+  .rule{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--bd);font-size:14px;color:var(--ink2)}
+  .rule:last-child{border:none}
+  .rule svg{flex:none;margin-top:3px;stroke:var(--ok)}
+  .rule b{color:var(--ink)}
+  footer{margin-top:48px;text-align:center;color:var(--ink3);font-size:13px}
+  .kbd{background:var(--bg3);border:1px solid var(--bd);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12px;font-family:ui-monospace,monospace}
+  @media (max-width:640px){ .typeRow{grid-template-columns:1fr;gap:8px} h1.display{font-size:32px;line-height:40px} section{padding:24px} }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="chip">● Platform Design</span>
+    <span class="chip gray">ТЗ на дизайн-макеты v1.0</span>
+    <span class="chip gray">Итерация 1: Foundations — готово</span>
+    <h1 class="display">01_Foundations</h1>
+    <p class="sub">Дизайн-токены платформы: обучающе-симуляционный продукт для психологов + терапевтические игры для клиентов. Эта страница — визуальная спека истины для <b>tokens/design-tokens.json</b> (W3C DTCG) и для библиотеки Penpot «Platform Core».</p>
+    <nav class="toc">
+      <a href="#colors">Цвета</a><a href="#type">Типографика</a><a href="#spacing">Spacing</a><a href="#radius">Радиусы</a><a href="#shadows">Тени</a><a href="#motion">Motion</a><a href="#grids">Сетки</a><a href="#icons">Иконки</a><a href="#wcag">WCAG-аудит</a><a href="#rules">Правила Penpot</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ================= ЦВЕТА ================= -->
+<section id="colors">
+  <h2>Цвета <span class="tok">color/* · color styles в Penpot</span></h2>
+  <p class="desc">Все цвета применяются только как styles/токены — «сырые» hex в макетах запрещены (правило ТЗ 3.1). Светлая тема — базовая, тёмная — обязательна для Telegram Mini App и клиентских экранов.</p>
+
+  <h3>Светлая тема</h3>
+  <div class="grouph">Фоны</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#FFFFFF"></div><div class="meta"><div class="nm">color/bg/primary</div><div class="hx">#FFFFFF</div><div class="use">Основной фон</div></div></div>
+<div class="card"><div class="sw" style="background:#F7F8FA"></div><div class="meta"><div class="nm">color/bg/secondary</div><div class="hx">#F7F8FA</div><div class="use">Фон карточек, секций</div></div></div>
+<div class="card"><div class="sw" style="background:#EEF0F4"></div><div class="meta"><div class="nm">color/bg/tertiary</div><div class="hx">#EEF0F4</div><div class="use">Ховеры, разделители</div></div></div>
+<div class="card"><div class="sw" style="background:#0F172A"></div><div class="meta"><div class="nm">color/bg/inverse</div><div class="hx">#0F172A</div><div class="use">Тёмный фон (опц.)</div></div></div>
+</div>
+<div class="grouph">Текст</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#0F172A"></div><div class="meta"><div class="nm">color/text/primary</div><div class="hx">#0F172A</div><div class="use">Заголовки, основной текст</div></div></div>
+<div class="card"><div class="sw" style="background:#475569"></div><div class="meta"><div class="nm">color/text/secondary</div><div class="hx">#475569</div><div class="use">Подписи</div></div></div>
+<div class="card"><div class="sw" style="background:#94A3B8"></div><div class="meta"><div class="nm">color/text/tertiary</div><div class="hx">#94A3B8</div><div class="use">Плейсхолдеры, disabled</div></div></div>
+<div class="card"><div class="sw" style="background:#FFFFFF"></div><div class="meta"><div class="nm">color/text/inverse</div><div class="hx">#FFFFFF</div><div class="use">Текст на тёмном</div></div></div>
+</div>
+<div class="grouph">Границы</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#E2E8F0"></div><div class="meta"><div class="nm">color/border/default</div><div class="hx">#E2E8F0</div><div class="use">Границы</div></div></div>
+<div class="card"><div class="sw" style="background:#2563EB"></div><div class="meta"><div class="nm">color/border/focus</div><div class="hx">#2563EB</div><div class="use">Фокус (обводка 2px, WCAG)</div></div></div>
+</div>
+<div class="grouph">Акценты</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#2563EB"></div><div class="meta"><div class="nm">color/accent/primary</div><div class="hx">#2563EB</div><div class="use">CTA, ссылки</div></div></div>
+<div class="card"><div class="sw" style="background:#1D4ED8"></div><div class="meta"><div class="nm">color/accent/primary-hover</div><div class="hx">#1D4ED8</div><div class="use">Ховер CTA</div></div></div>
+<div class="card"><div class="sw" style="background:#7C3AED"></div><div class="meta"><div class="nm">color/accent/secondary</div><div class="hx">#7C3AED</div><div class="use">Вторичный акцент</div></div></div>
+</div>
+<div class="grouph">Семантика</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#16A34A"></div><div class="meta"><div class="nm">color/semantic/success</div><div class="hx">#16A34A</div><div class="use">Успех</div></div></div>
+<div class="card"><div class="sw" style="background:#F59E0B"></div><div class="meta"><div class="nm">color/semantic/warning</div><div class="hx">#F59E0B</div><div class="use">Предупреждение</div></div></div>
+<div class="card"><div class="sw" style="background:#DC2626"></div><div class="meta"><div class="nm">color/semantic/error</div><div class="hx">#DC2626</div><div class="use">Ошибка</div></div></div>
+<div class="card"><div class="sw" style="background:#0EA5E9"></div><div class="meta"><div class="nm">color/semantic/info</div><div class="hx">#0EA5E9</div><div class="use">Инфо</div></div></div>
+</div>
+<div class="grouph">Эмоции (шкала 0–10)</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#DC2626"></div><div class="meta"><div class="nm">color/emotion/low</div><div class="hx">#DC2626</div><div class="use">Эмоция 0–3</div></div></div>
+<div class="card"><div class="sw" style="background:#F59E0B"></div><div class="meta"><div class="nm">color/emotion/mid</div><div class="hx">#F59E0B</div><div class="use">Эмоция 4–6</div></div></div>
+<div class="card"><div class="sw" style="background:#16A34A"></div><div class="meta"><div class="nm">color/emotion/high</div><div class="hx">#16A34A</div><div class="use">Эмоция 7–10</div></div></div>
+</div>
+<div class="grouph">Навыки (8)</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#2563EB"></div><div class="meta"><div class="nm">color/skill/active-listening</div><div class="hx">#2563EB</div><div class="use">Навык: активное слушание</div></div></div>
+<div class="card"><div class="sw" style="background:#7C3AED"></div><div class="meta"><div class="nm">color/skill/empathy</div><div class="hx">#7C3AED</div><div class="use">Навык: эмпатия</div></div></div>
+<div class="card"><div class="sw" style="background:#0891B2"></div><div class="meta"><div class="nm">color/skill/boundaries</div><div class="hx">#0891B2</div><div class="use">Навык: границы</div></div></div>
+<div class="card"><div class="sw" style="background:#DB2777"></div><div class="meta"><div class="nm">color/skill/emotion-work</div><div class="hx">#DB2777</div><div class="use">Навык: работа с эмоциями</div></div></div>
+<div class="card"><div class="sw" style="background:#65A30D"></div><div class="meta"><div class="nm">color/skill/structuring</div><div class="hx">#65A30D</div><div class="use">Навык: структурирование</div></div></div>
+<div class="card"><div class="sw" style="background:#EA580C"></div><div class="meta"><div class="nm">color/skill/resistance</div><div class="hx">#EA580C</div><div class="use">Навык: работа с сопротивлением</div></div></div>
+<div class="card"><div class="sw" style="background:#0EA5E9"></div><div class="meta"><div class="nm">color/skill/questioning</div><div class="hx">#0EA5E9</div><div class="use">Навык: вопрошание</div></div></div>
+<div class="card"><div class="sw" style="background:#9333EA"></div><div class="meta"><div class="nm">color/skill/reflection</div><div class="hx">#9333EA</div><div class="use">Навык: рефлексия</div></div></div>
+</div>
+
+  <h3>Тёмная тема <span class="mono" style="font-size:12px;color:var(--ink3)">— акценты и семантика те же</span></h3>
+  <div class="grouph">Фоны</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#0B1220"></div><div class="meta"><div class="nm">color/dark/bg/primary</div><div class="hx">#0B1220</div><div class="use">Основной фон (dark)</div></div></div>
+<div class="card"><div class="sw" style="background:#111827"></div><div class="meta"><div class="nm">color/dark/bg/secondary</div><div class="hx">#111827</div><div class="use">Фон карточек (dark)</div></div></div>
+</div>
+<div class="grouph">Текст</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#F8FAFC"></div><div class="meta"><div class="nm">color/dark/text/primary</div><div class="hx">#F8FAFC</div><div class="use">Основной текст (dark)</div></div></div>
+<div class="card"><div class="sw" style="background:#CBD5E1"></div><div class="meta"><div class="nm">color/dark/text/secondary</div><div class="hx">#CBD5E1</div><div class="use">Подписи (dark)</div></div></div>
+</div>
+<div class="grouph">Границы</div>
+<div class="grid g4">
+<div class="card"><div class="sw" style="background:#1F2937"></div><div class="meta"><div class="nm">color/dark/border/default</div><div class="hx">#1F2937</div><div class="use">Границы (dark)</div></div></div>
+</div>
+
+  <div class="alert w">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <div><b>WCAG: белый текст на warning/info запрещён</b>Контраст белого на <span class="mono">#F59E0B</span> = 2.15:1, на <span class="mono">#0EA5E9</span> = 2.77:1 — ниже 4.5:1. На заливках warning и info использовать тёмный текст <span class="mono">#0F172A</span> (8.31:1 и 6.44:1). Кнопки на этих цветах — только с dark-label либо перекрашивать фон в более тёмные оттенки (открытый вопрос №2 в Handoff).</div>
+  </div>
+  <div class="alert e">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+    <div><b>text/tertiary — только disabled и плейсхолдеры</b><span class="mono">#94A3B8</span> на белом даёт 2.56:1. Запрещено для читаемого текста, подписей полей и сообщений. Для secondary-текста использовать <span class="mono">#475569</span> (7.58:1).</div>
+  </div>
+  <div class="alert i">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    <div><b>Эмоции и статусы: никогда не только цвет</b>По ТЗ 8.1 смысл передаётся иконкой + цветом (EmotionIndicator: иконка low/mid/high + цвет). Цвет emotion/mid на белом — 2.15:1, поэтому в текстовых контекстах его дублировать формой/иконкой/подписью.</div>
+  </div>
+</section>
+
+<!-- ================= ТИПОГРАФИКА ================= -->
+<section id="type">
+  <h2>Типографика <span class="tok">text/* · text styles в Penpot</span></h2>
+  <p class="desc">Шрифт <b>Inter</b> (открытый, SIL OFL) + <b>JetBrains Mono</b> для кодов доступа. Все начертания — как text styles, отдельными слоями не задавать (правило ТЗ 3.2). Основной текст ≥ 16px (WCAG).</p>
+  <div class="typeRow"><div class="typeSpec"><div class="nm">text/display</div><div class="sp">40px/48px · 700 · Inter · Hero</div></div><div style="font-family:Inter, sans-serif;font-size:40px;line-height:48px;font-weight:700;color:#0F172A">Симуляция консультации</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/h1</div><div class="sp">32px/40px · 700 · Inter · Заголовок страницы</div></div><div style="font-family:Inter, sans-serif;font-size:32px;line-height:40px;font-weight:700;color:#0F172A">Библиотека сценариев</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/h2</div><div class="sp">24px/32px · 600 · Inter · Заголовок секции</div></div><div style="font-family:Inter, sans-serif;font-size:24px;line-height:32px;font-weight:600;color:#0F172A">Активное слушание</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/h3</div><div class="sp">20px/28px · 600 · Inter · Заголовок карточки</div></div><div style="font-family:Inter, sans-serif;font-size:20px;line-height:28px;font-weight:600;color:#0F172A">Карточка сценария</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/body-lg</div><div class="sp">18px/28px · 400 · Inter · Крупный текст</div></div><div style="font-family:Inter, sans-serif;font-size:18px;line-height:28px;font-weight:400;color:#0F172A">Клиент делится сложной ситуацией</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/body</div><div class="sp">16px/24px · 400 · Inter · Основной текст</div></div><div style="font-family:Inter, sans-serif;font-size:16px;line-height:24px;font-weight:400;color:#0F172A">Основной текст интерфейса</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/body-sm</div><div class="sp">14px/20px · 400 · Inter · Подписи</div></div><div style="font-family:Inter, sans-serif;font-size:14px;line-height:20px;font-weight:400;color:#0F172A">Подпись под полем ввода</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/caption</div><div class="sp">12px/16px · 500 · Inter · Мета, лейблы</div></div><div style="font-family:Inter, sans-serif;font-size:12px;line-height:16px;font-weight:500;color:#0F172A">МЕТА · ШАГ 2 ИЗ 7</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/button</div><div class="sp">16px/24px · 600 · Inter · Кнопки</div></div><div style="font-family:Inter, sans-serif;font-size:16px;line-height:24px;font-weight:600;color:#0F172A">Начать симуляцию</div></div>
+<div class="typeRow"><div class="typeSpec"><div class="nm">text/mono</div><div class="sp">14px/20px · 400 · JetBrains Mono · Коды доступа (monospace)</div></div><div style="font-family:JetBrains Mono, ui-monospace, monospace;font-size:14px;line-height:20px;font-weight:400;color:#0F172A">A7X9-Q2</div></div>
+</section>
+
+<!-- ================= SPACING ================= -->
+<section id="spacing">
+  <h2>Spacing <span class="tok">space/1 … space/9 · шкала 4px</span></h2>
+  <p class="desc">Единственная шкала отступов. В Penpot задавать точными значениями из шкалы; в CSS — переменными <span class="mono">--space-*</span>.</p>
+  <div class="spaceRow"><div class="lbl">space/1 · 4px</div><div class="bar" style="width:17px; min-width:8px"><span>4px</span></div></div>
+<div class="spaceRow"><div class="lbl">space/2 · 8px</div><div class="bar" style="width:34px; min-width:8px"><span>8px</span></div></div>
+<div class="spaceRow"><div class="lbl">space/3 · 12px</div><div class="bar" style="width:52px; min-width:8px"><span>12px</span></div></div>
+<div class="spaceRow"><div class="lbl">space/4 · 16px</div><div class="bar" style="width:69px; min-width:8px"><span>16px</span></div></div>
+<div class="spaceRow"><div class="lbl">space/5 · 24px</div><div class="bar" style="width:104px; min-width:8px"><span>24px</span></div></div>
+<div class="spaceRow"><div class="lbl">space/6 · 32px</div><div class="bar" style="width:138px; min-width:8px"><span>32px</span></div></div>
+<div class="spaceRow"><div class="lbl">space/7 · 48px</div><div class="bar" style="width:208px; min-width:8px"><span>48px</span></div></div>
+<div class="spaceRow"><div class="lbl">space/8 · 64px</div><div class="bar" style="width:261px; min-width:8px"><span>64px</span></div></div>
+<div class="spaceRow"><div class="lbl">space/9 · 96px</div><div class="bar" style="width:368px; min-width:8px"><span>96px</span></div></div>
+</section>
+
+<!-- ================= РАДИУСЫ ================= -->
+<section id="radius">
+  <h2>Радиусы <span class="tok">radius/xs … radius/full</span></h2>
+  <div class="radiusGrid"><div class="rbox"><div class="sq" style="border-radius:4px"></div><div class="cap"><b>radius/xs</b>4</div></div>
+<div class="rbox"><div class="sq" style="border-radius:8px"></div><div class="cap"><b>radius/sm</b>8</div></div>
+<div class="rbox"><div class="sq" style="border-radius:12px"></div><div class="cap"><b>radius/md</b>12</div></div>
+<div class="rbox"><div class="sq" style="border-radius:16px"></div><div class="cap"><b>radius/lg</b>16</div></div>
+<div class="rbox"><div class="sq" style="border-radius:24px"></div><div class="cap"><b>radius/xl</b>24</div></div>
+<div class="rbox"><div class="sq" style="border-radius:28px"></div><div class="cap"><b>radius/full</b>full</div></div></div>
+</section>
+
+<!-- ================= ТЕНИ ================= -->
+<section id="shadows">
+  <h2>Тени <span class="tok">shadow/sm · md · lg</span></h2>
+  <p class="desc">Drop-shadow, чёрный с прозрачностью. В Penpot — shadow styles; в CSS — <span class="mono">--shadow-*</span>.</p>
+  <div class="shadowGrid"><div class="shadowCard s1"><div class="sq"></div><div class="cap"><b>shadow/sm</b><span class="mono" style="font-size:11px">0px 1px 2px · 0%</span></div></div>
+<div class="shadowCard s2"><div class="sq"></div><div class="cap"><b>shadow/md</b><span class="mono" style="font-size:11px">0px 4px 12px · 0%</span></div></div>
+<div class="shadowCard s3"><div class="sq"></div><div class="cap"><b>shadow/lg</b><span class="mono" style="font-size:11px">0px 12px 32px · 0%</span></div></div></div>
+</section>
+
+<!-- ================= MOTION ================= -->
+<section id="motion">
+  <h2>Motion <span class="tok">motion/fast · base · slow · spring</span></h2>
+  <p class="desc">Спека анимаций для прототипов (ТЗ 3.7 и 7): в комментариях к фреймам Penpot писать в формате <span class="mono">transition: motion/base, ease-in-out</span>. Демо ниже — живое, наведите курсор.</p>
+  <div class="motionDemo">
+    <div class="mcard fast"><div class="nm">motion/fast — 150ms · ease-out</div><div class="sp">Ховеры, фокус</div><button class="btn">Кнопка</button></div>
+    <div class="mcard base"><div class="nm">motion/base — 250ms · ease-in-out</div><div class="sp">Переходы, модалки</div><button class="btn">Кнопка</button></div>
+    <div class="mcard slow"><div class="nm">motion/slow — 400ms · ease-in-out</div><div class="sp">Крупные переходы</div><button class="btn">Кнопка</button></div>
+    <div class="mcard spring"><div class="nm">motion/spring — 500ms · cubic-bezier(.34,1.56,.64,1)</div><div class="sp">Появление карточек</div><button class="btn">Кнопка</button></div>
+  </div>
+</section>
+
+<!-- ================= СЕТКИ ================= -->
+<section id="grids">
+  <h2>Сетки и фреймы <span class="tok">ТЗ 2.3</span></h2>
+  <p class="desc">Каждый экран — в 3 вариантах: 1440 / 768 / 390. Для TMA — только 390 с safe area. Правила адаптива: desktop — sidebar слева; tablet — sidebar в иконки; mobile — bottom nav, одна колонка; TMA — MainButton и BackButton Telegram.</p>
+  <div class="gridDiagrams">
+    <div class="gcard"><h4>Desktop · 1440</h4><p>12 колонок · gutter 24 · margin 120 · контент 1200 · брейкпоинты 1440/1280/1024</p><svg viewBox="0 0 1440 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Desktop · 1440"><rect width="1440" height="220" rx="10" fill="#F7F8FA" stroke="#E2E8F0"/><rect width="1440" height="220" rx="10" fill="#fff"/><rect x="120" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="222" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="324" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="426" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="528" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="630" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="732" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="834" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="936" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="1038" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="1140" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="1242" y="8" width="78" height="204" fill="#DBEAFE" opacity="0.9"/><rect x="0" y="0" width="120" height="220" fill="#F1F5F9" opacity="0.7"/><rect x="1320" y="0" width="120" height="220" fill="#F1F5F9" opacity="0.7"/></svg></div>
+<div class="gcard"><h4>Tablet · 768</h4><p>8 колонок · gutter 16 · margin 32 · sidebar → иконки</p><svg viewBox="0 0 768 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tablet · 768"><rect width="768" height="200" rx="10" fill="#F7F8FA" stroke="#E2E8F0"/><rect width="768" height="200" rx="10" fill="#fff"/><rect x="32" y="8" width="74" height="184" fill="#DBEAFE" opacity="0.9"/><rect x="122" y="8" width="74" height="184" fill="#DBEAFE" opacity="0.9"/><rect x="212" y="8" width="74" height="184" fill="#DBEAFE" opacity="0.9"/><rect x="302" y="8" width="74" height="184" fill="#DBEAFE" opacity="0.9"/><rect x="392" y="8" width="74" height="184" fill="#DBEAFE" opacity="0.9"/><rect x="482" y="8" width="74" height="184" fill="#DBEAFE" opacity="0.9"/><rect x="572" y="8" width="74" height="184" fill="#DBEAFE" opacity="0.9"/><rect x="662" y="8" width="74" height="184" fill="#DBEAFE" opacity="0.9"/><rect x="0" y="0" width="32" height="200" fill="#F1F5F9" opacity="0.7"/><rect x="736" y="0" width="32" height="200" fill="#F1F5F9" opacity="0.7"/></svg></div>
+<div class="gcard"><h4>Mobile web · 390</h4><p>4 колонки · gutter 16 · margin 16 · bottom nav</p><svg viewBox="0 0 390 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mobile web · 390"><rect width="390" height="170" rx="10" fill="#F7F8FA" stroke="#E2E8F0"/><rect width="390" height="170" rx="10" fill="#fff"/><rect x="16" y="8" width="78" height="154" fill="#DBEAFE" opacity="0.9"/><rect x="110" y="8" width="78" height="154" fill="#DBEAFE" opacity="0.9"/><rect x="203" y="8" width="78" height="154" fill="#DBEAFE" opacity="0.9"/><rect x="296" y="8" width="78" height="154" fill="#DBEAFE" opacity="0.9"/><rect x="0" y="0" width="16" height="170" fill="#F1F5F9" opacity="0.7"/><rect x="374" y="0" width="16" height="170" fill="#F1F5F9" opacity="0.7"/></svg></div>
+<div class="gcard"><h4>Telegram Mini App · 390</h4><p>safe area: header ~56px, MainButton ~80px · пометка «TMA»</p><svg viewBox="0 0 390 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Telegram Mini App · 390"><rect width="390" height="300" rx="10" fill="#F7F8FA" stroke="#E2E8F0"/><rect width="390" height="34" rx="10" fill="#FDE68A"/><rect y="262" width="390" height="38" fill="#FDE68A"/><rect y="34" width="390" height="228" fill="#fff"/><text x="195.0" y="21" text-anchor="middle" font-size="12" fill="#92400E" font-family="monospace">Telegram header · 56px safe area</text><text x="195.0" y="284" text-anchor="middle" font-size="12" fill="#92400E" font-family="monospace">MainButton · 80px safe area</text><rect x="16" y="42" width="78" height="212" fill="#DBEAFE" opacity="0.9"/><rect x="110" y="42" width="78" height="212" fill="#DBEAFE" opacity="0.9"/><rect x="203" y="42" width="78" height="212" fill="#DBEAFE" opacity="0.9"/><rect x="296" y="42" width="78" height="212" fill="#DBEAFE" opacity="0.9"/><rect x="0" y="34" width="16" height="228" fill="#F1F5F9" opacity="0.7"/><rect x="374" y="34" width="16" height="228" fill="#F1F5F9" opacity="0.7"/></svg></div>
+  </div>
+</section>
+
+<!-- ================= ИКОНКИ ================= -->
+<section id="icons">
+  <h2>Иконки <span class="tok">Lucide v0.544 · ISC · outline, stroke 2</span></h2>
+  <p class="desc">Библиотека <b>Lucide</b> (открытая, лицензия ISC, совместима с ТЗ 3.6). Размеры в макетах: 16 / 20 / 24 / 32. В папке <span class="mono">icons/lucide/</span> лежат 74 отобранных SVG. Каждый значок в UI должен иметь текстовую подпись или aria-label (WCAG 8.1).</p>
+  <div class="iconGrid">
+    <div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-alert-octagon"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 16h.01" />
+  <path d="M12 8v4" />
+  <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" />
+</svg><span>alert-octagon</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-arrow-left"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" />
+</svg><span>arrow-left</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-arrow-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+  <path d="m12 5 7 7-7 7" />
+</svg><span>arrow-right</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-badge-check"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
+  <path d="m9 12 2 2 4-4" />
+</svg><span>badge-check</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-book-open"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 7v14" />
+  <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+</svg><span>book-open</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-brain"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 18V5" />
+  <path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4" />
+  <path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5" />
+  <path d="M17.997 5.125a4 4 0 0 1 2.526 5.77" />
+  <path d="M18 18a4 4 0 0 0 2-7.464" />
+  <path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517" />
+  <path d="M6 18a4 4 0 0 1-2-7.464" />
+  <path d="M6.003 5.125a4 4 0 0 0-2.526 5.77" />
+</svg><span>brain</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-calendar"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M8 2v4" />
+  <path d="M16 2v4" />
+  <rect width="18" height="18" x="3" y="4" rx="2" />
+  <path d="M3 10h18" />
+</svg><span>calendar</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-chart-column"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+  <path d="M18 17V9" />
+  <path d="M13 17V5" />
+  <path d="M8 17v-3" />
+</svg><span>chart-column</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-check"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M20 6 9 17l-5-5" />
+</svg><span>check</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-chevron-down"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m6 9 6 6 6-6" />
+</svg><span>chevron-down</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-chevron-left"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m15 18-6-6 6-6" />
+</svg><span>chevron-left</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg><span>chevron-right</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-chevron-up"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m18 15-6-6-6 6" />
+</svg><span>chevron-up</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-circle-check-big"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21.801 10A10 10 0 1 1 17 3.335" />
+  <path d="m9 11 3 3L22 4" />
+</svg><span>circle-check-big</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-circle-check"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="m9 12 2 2 4-4" />
+</svg><span>circle-check</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-circle-help"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+  <path d="M12 17h.01" />
+</svg><span>circle-help</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-circle-x"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="m15 9-6 6" />
+  <path d="m9 9 6 6" />
+</svg><span>circle-x</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-clock"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 6v6l4 2" />
+  <circle cx="12" cy="12" r="10" />
+</svg><span>clock</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-copy"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+</svg><span>copy</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-download"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 15V3" />
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+  <path d="m7 10 5 5 5-5" />
+</svg><span>download</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-external-link"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 3h6v6" />
+  <path d="M10 14 21 3" />
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+</svg><span>external-link</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-eye-off"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+  <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+  <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+  <path d="m2 2 20 20" />
+</svg><span>eye-off</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-eye"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+  <circle cx="12" cy="12" r="3" />
+</svg><span>eye</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-file-text"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+  <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+  <path d="M10 9H8" />
+  <path d="M16 13H8" />
+  <path d="M16 17H8" />
+</svg><span>file-text</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-filter"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z" />
+</svg><span>filter</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-fingerprint"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
+  <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+  <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+  <path d="M2 12a10 10 0 0 1 18-6" />
+  <path d="M2 16h.01" />
+  <path d="M21.8 16c.2-2 .131-5.354 0-6" />
+  <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" />
+  <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+  <path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
+</svg><span>fingerprint</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-frown"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="M16 16s-1.5-2-4-2-4 2-4 2" />
+  <line x1="9" x2="9.01" y1="9" y2="9" />
+  <line x1="15" x2="15.01" y1="9" y2="9" />
+</svg><span>frown</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-gauge"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m12 14 4-4" />
+  <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+</svg><span>gauge</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-graduation-cap"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+  <path d="M22 10v6" />
+  <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+</svg><span>graduation-cap</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-heart"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
+</svg><span>heart</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-home"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+  <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+</svg><span>home</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-inbox"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+  <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+</svg><span>inbox</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-info"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="M12 16v-4" />
+  <path d="M12 8h.01" />
+</svg><span>info</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-key-round"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" />
+  <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" />
+</svg><span>key-round</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-layout-grid"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="7" height="7" x="3" y="3" rx="1" />
+  <rect width="7" height="7" x="14" y="3" rx="1" />
+  <rect width="7" height="7" x="14" y="14" rx="1" />
+  <rect width="7" height="7" x="3" y="14" rx="1" />
+</svg><span>layout-grid</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-line-chart"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+  <path d="m19 9-5 5-4-4-3 3" />
+</svg><span>line-chart</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-link-2"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+  <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
+  <line x1="8" x2="16" y1="12" y2="12" />
+</svg><span>link-2</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-list"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 5h.01" />
+  <path d="M3 12h.01" />
+  <path d="M3 19h.01" />
+  <path d="M8 5h13" />
+  <path d="M8 12h13" />
+  <path d="M8 19h13" />
+</svg><span>list</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-loader-circle"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+</svg><span>loader-circle</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-lock"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+</svg><span>lock</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-log-out"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m16 17 5-5-5-5" />
+  <path d="M21 12H9" />
+  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+</svg><span>log-out</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-mail"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
+  <rect x="2" y="4" width="20" height="16" rx="2" />
+</svg><span>mail</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-meh"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <line x1="8" x2="16" y1="15" y2="15" />
+  <line x1="9" x2="9.01" y1="9" y2="9" />
+  <line x1="15" x2="15.01" y1="9" y2="9" />
+</svg><span>meh</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-message-circle"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" />
+</svg><span>message-circle</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-message-square"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
+</svg><span>message-square</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-monitor"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="20" height="14" x="2" y="3" rx="2" />
+  <line x1="8" x2="16" y1="21" y2="21" />
+  <line x1="12" x2="12" y1="17" y2="21" />
+</svg><span>monitor</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-pause"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect x="14" y="3" width="5" height="18" rx="1" />
+  <rect x="5" y="3" width="5" height="18" rx="1" />
+</svg><span>pause</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-play"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" />
+</svg><span>play</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-plus"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+  <path d="M12 5v14" />
+</svg><span>plus</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-qr-code"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="5" height="5" x="3" y="3" rx="1" />
+  <rect width="5" height="5" x="16" y="3" rx="1" />
+  <rect width="5" height="5" x="3" y="16" rx="1" />
+  <path d="M21 16h-3a2 2 0 0 0-2 2v3" />
+  <path d="M21 21v.01" />
+  <path d="M12 7v3a2 2 0 0 1-2 2H7" />
+  <path d="M3 12h.01" />
+  <path d="M12 3h.01" />
+  <path d="M12 16v.01" />
+  <path d="M16 12h1" />
+  <path d="M21 12v.01" />
+  <path d="M12 21v-1" />
+</svg><span>qr-code</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-refresh-cw"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+  <path d="M21 3v5h-5" />
+  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+  <path d="M8 16H3v5" />
+</svg><span>refresh-cw</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-rotate-ccw"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+  <path d="M3 3v5h5" />
+</svg><span>rotate-ccw</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-scale"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+  <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+  <path d="M7 21h10" />
+  <path d="M12 3v18" />
+  <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+</svg><span>scale</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-search"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m21 21-4.34-4.34" />
+  <circle cx="11" cy="11" r="8" />
+</svg><span>search</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-send"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+  <path d="m21.854 2.147-10.94 10.939" />
+</svg><span>send</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-settings"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
+  <circle cx="12" cy="12" r="3" />
+</svg><span>settings</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-share-2"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="18" cy="5" r="3" />
+  <circle cx="6" cy="12" r="3" />
+  <circle cx="18" cy="19" r="3" />
+  <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+  <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+</svg><span>share-2</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-shield-check"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+  <path d="m9 12 2 2 4-4" />
+</svg><span>shield-check</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-sliders-horizontal"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 5H3" />
+  <path d="M12 19H3" />
+  <path d="M14 3v4" />
+  <path d="M16 17v4" />
+  <path d="M21 12h-9" />
+  <path d="M21 19h-5" />
+  <path d="M21 5h-7" />
+  <path d="M8 10v4" />
+  <path d="M8 12H3" />
+</svg><span>sliders-horizontal</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-smartphone"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+  <path d="M12 18h.01" />
+</svg><span>smartphone</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-smile"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+  <line x1="9" x2="9.01" y1="9" y2="9" />
+  <line x1="15" x2="15.01" y1="9" y2="9" />
+</svg><span>smile</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-sparkles"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
+  <path d="M20 2v4" />
+  <path d="M22 4h-4" />
+  <circle cx="4" cy="20" r="2" />
+</svg><span>sparkles</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-square-pen"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+  <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+</svg><span>square-pen</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-star"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
+</svg><span>star</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-target"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <circle cx="12" cy="12" r="6" />
+  <circle cx="12" cy="12" r="2" />
+</svg><span>target</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-timer"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <line x1="10" x2="14" y1="2" y2="2" />
+  <line x1="12" x2="15" y1="14" y2="11" />
+  <circle cx="12" cy="14" r="8" />
+</svg><span>timer</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-trash-2"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 11v6" />
+  <path d="M14 11v6" />
+  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+  <path d="M3 6h18" />
+  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+</svg><span>trash-2</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-triangle-alert"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+  <path d="M12 9v4" />
+  <path d="M12 17h.01" />
+</svg><span>triangle-alert</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-trophy"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978" />
+  <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978" />
+  <path d="M18 9h1.5a1 1 0 0 0 0-5H18" />
+  <path d="M4 22h16" />
+  <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" />
+  <path d="M6 9H4.5a1 1 0 0 1 0-5H6" />
+</svg><span>trophy</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-user-plus"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+  <circle cx="9" cy="7" r="4" />
+  <line x1="19" x2="19" y1="8" y2="14" />
+  <line x1="22" x2="16" y1="11" y2="11" />
+</svg><span>user-plus</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-user"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+  <circle cx="12" cy="7" r="4" />
+</svg><span>user</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-users"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+  <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+  <circle cx="9" cy="7" r="4" />
+</svg><span>users</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-x"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M18 6 6 18" />
+  <path d="m6 6 12 12" />
+</svg><span>x</span></div>
+<div class="icell"><svg aria-hidden="true"
+  class="lucide lucide-zap"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+</svg><span>zap</span></div>
+  </div>
+</section>
+
+<!-- ================= WCAG ================= -->
+<section id="wcag">
+  <h2>WCAG 2.1 AA — аудит пар «текст/фон» <span class="tok">ТЗ 8.1</span></h2>
+  <p class="desc">Контраст: обычный текст ≥ 4.5:1 (AA), крупный ≥ 3:1, UI-элементы ≥ 3:1. Фокус — обводка <span class="mono">color/border/focus</span> 2px, кликабельные зоны ≥ 44×44px, смысл — не только цветом.</p>
+  <table><thead><tr><th>Пара</th><th>Значения</th><th>Контраст</th><th>Вердикт</th><th>Использование</th></tr></thead><tbody><tr><td>text/primary на bg/primary</td><td class="mono">#0F172A <span style="color:#94A3B8">на</span> #FFFFFF</td><td class="mono">17.85:1</td><td><span class="pill ok">AAA</span></td><td style="color:#475569;font-size:13px">основной текст</td></tr>
+<tr><td>text/secondary на bg/primary</td><td class="mono">#475569 <span style="color:#94A3B8">на</span> #FFFFFF</td><td class="mono">7.58:1</td><td><span class="pill ok">AAA</span></td><td style="color:#475569;font-size:13px">подписи</td></tr>
+<tr><td>text/secondary на bg/secondary</td><td class="mono">#475569 <span style="color:#94A3B8">на</span> #F7F8FA</td><td class="mono">7.13:1</td><td><span class="pill ok">AAA</span></td><td style="color:#475569;font-size:13px">подписи на карточках</td></tr>
+<tr><td>text/tertiary на bg/primary</td><td class="mono">#94A3B8 <span style="color:#94A3B8">на</span> #FFFFFF</td><td class="mono">2.56:1</td><td><span class="pill fail">FAIL</span></td><td style="color:#475569;font-size:13px">⚠ только disabled/placeholder</td></tr>
+<tr><td>белый на accent/primary</td><td class="mono">#FFFFFF <span style="color:#94A3B8">на</span> #2563EB</td><td class="mono">5.17:1</td><td><span class="pill aa">AA</span></td><td style="color:#475569;font-size:13px">кнопка CTA</td></tr>
+<tr><td>белый на accent/primary-hover</td><td class="mono">#FFFFFF <span style="color:#94A3B8">на</span> #1D4ED8</td><td class="mono">6.70:1</td><td><span class="pill aa">AA</span></td><td style="color:#475569;font-size:13px">hover CTA</td></tr>
+<tr><td>accent/primary на bg/primary</td><td class="mono">#2563EB <span style="color:#94A3B8">на</span> #FFFFFF</td><td class="mono">5.17:1</td><td><span class="pill aa">AA</span></td><td style="color:#475569;font-size:13px">ссылки</td></tr>
+<tr><td>белый на semantic/success</td><td class="mono">#FFFFFF <span style="color:#94A3B8">на</span> #16A34A</td><td class="mono">3.30:1</td><td><span class="pill aal">AA · крупный/UI</span></td><td style="color:#475569;font-size:13px">крупный текст/UI</td></tr>
+<tr><td>белый на semantic/warning</td><td class="mono">#FFFFFF <span style="color:#94A3B8">на</span> #F59E0B</td><td class="mono">2.15:1</td><td><span class="pill fail">FAIL</span></td><td style="color:#475569;font-size:13px">✗ запрещено → тёмный текст</td></tr>
+<tr><td>text/primary на semantic/warning</td><td class="mono">#0F172A <span style="color:#94A3B8">на</span> #F59E0B</td><td class="mono">8.31:1</td><td><span class="pill ok">AAA</span></td><td style="color:#475569;font-size:13px">правильный вариант</td></tr>
+<tr><td>белый на semantic/error</td><td class="mono">#FFFFFF <span style="color:#94A3B8">на</span> #DC2626</td><td class="mono">4.83:1</td><td><span class="pill aa">AA</span></td><td style="color:#475569;font-size:13px">кнопка ошибки</td></tr>
+<tr><td>белый на semantic/info</td><td class="mono">#FFFFFF <span style="color:#94A3B8">на</span> #0EA5E9</td><td class="mono">2.77:1</td><td><span class="pill fail">FAIL</span></td><td style="color:#475569;font-size:13px">✗ запрещено → тёмный текст</td></tr>
+<tr><td>text/primary на semantic/info</td><td class="mono">#0F172A <span style="color:#94A3B8">на</span> #0EA5E9</td><td class="mono">6.44:1</td><td><span class="pill aa">AA</span></td><td style="color:#475569;font-size:13px">правильный вариант</td></tr>
+<tr><td>emotion/low на bg/primary</td><td class="mono">#DC2626 <span style="color:#94A3B8">на</span> #FFFFFF</td><td class="mono">4.83:1</td><td><span class="pill aa">AA</span></td><td style="color:#475569;font-size:13px">иконка + подпись</td></tr>
+<tr><td>emotion/high на bg/primary</td><td class="mono">#16A34A <span style="color:#94A3B8">на</span> #FFFFFF</td><td class="mono">3.30:1</td><td><span class="pill aal">AA · крупный/UI</span></td><td style="color:#475569;font-size:13px">иконка + подпись · крупный</td></tr>
+<tr><td>border/focus на bg/primary</td><td class="mono">#2563EB <span style="color:#94A3B8">на</span> #FFFFFF</td><td class="mono">5.17:1</td><td><span class="pill aa">AA</span></td><td style="color:#475569;font-size:13px">фокус-обводка ≥3:1 ✓</td></tr>
+<tr><td>text/primary-dark на bg/primary-dark</td><td class="mono">#F8FAFC <span style="color:#94A3B8">на</span> #0B1220</td><td class="mono">17.89:1</td><td><span class="pill ok">AAA</span></td><td style="color:#475569;font-size:13px">тёмная тема</td></tr>
+<tr><td>text/secondary-dark на bg/primary-dark</td><td class="mono">#CBD5E1 <span style="color:#94A3B8">на</span> #0B1220</td><td class="mono">12.61:1</td><td><span class="pill ok">AAA</span></td><td style="color:#475569;font-size:13px">тёмная тема</td></tr>
+<tr><td>text/secondary-dark на bg/secondary-dark</td><td class="mono">#CBD5E1 <span style="color:#94A3B8">на</span> #111827</td><td class="mono">11.95:1</td><td><span class="pill ok">AAA</span></td><td style="color:#475569;font-size:13px">тёмная тема, карточки</td></tr>
+<tr><td>accent/primary на bg/primary-dark</td><td class="mono">#2563EB <span style="color:#94A3B8">на</span> #0B1220</td><td class="mono">3.62:1</td><td><span class="pill aal">AA · крупный/UI</span></td><td style="color:#475569;font-size:13px">ссылки в тёмной теме · UI</td></tr></tbody></table>
+</section>
+
+<!-- ================= ПРАВИЛА ================= -->
+<section id="rules">
+  <h2>Правила работы в Penpot <span class="tok">ТЗ 2, 9</span></h2>
+  <div class="rule"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Только styles:</b> цвета — color styles, шрифты — text styles, тени — shadow styles. Сырой hex/размер в слое — дефект приёмки (11.2).</div></div>
+  <div class="rule"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Компоненты с вариантами:</b> Button/primary/hover, Input/default/focus… Нейминг: <span class="mono">ComponentName / Variant / State</span> (9.3).</div></div>
+  <div class="rule"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Фреймы экранов:</b> <span class="mono">E-XX Название / breakpoint</span> — например <span class="mono">E-22 Session Active / 1440</span>.</div></div>
+  <div class="rule"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Слои:</b> осмысленные имена без «Rectangle 23»; логическая группировка.</div></div>
+  <div class="rule"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Flex Layout</b> вместо привычного auto-layout из Figma; сложная логика прототипа — комментариями (ограничения Penpot, ТЗ 12.4).</div></div>
+  <div class="rule"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Библиотеки:</b> «Platform Core» (токены + UI-kit) и «Platform Illustrations» — shared libraries между страницами проекта (2.2).</div></div>
+  <div class="rule"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Экспорт токенов</b> для разработчиков: Tools → Tokens → Export (DTCG JSON) или готовый <span class="mono">tokens/tokens.css</span> + пример Tailwind-конфига внутри него (9.2).</div></div>
+</section>
+
+<footer>
+  Platform Design · Foundations v1.0 · сгенерировано 2026-09-16 · источник истины: tokens/design-tokens.json · плагин: plugin/dist (Platform Foundations Builder)
+</footer>
+</div>
+</body>
+</html>

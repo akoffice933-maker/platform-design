@@ -1,0 +1,145 @@
+/* ============================================================================
+   Platform Design — CSS-токены (раздел 3 ТЗ v1.0)
+   Источник: design-tokens.json (W3C DTCG). Не редактировать вручную —
+   генерируется из токенов. Маппинг на Tailwind: см. tailwind.config пример
+   в конце файла / docs/01-setup-penpot.md
+   ========================================================================== */
+
+:root {
+  /* ---- Цвета: фоны ---- */
+  --color-bg-primary:   #FFFFFF;  /* Основной фон */
+  --color-bg-secondary: #F7F8FA;  /* Фон карточек, секций */
+  --color-bg-tertiary:  #EEF0F4;  /* Ховеры, разделители */
+  --color-bg-inverse:   #0F172A;  /* Тёмный фон (опц.) */
+
+  /* ---- Цвета: текст ---- */
+  --color-text-primary:   #0F172A; /* Заголовки, основной текст */
+  --color-text-secondary: #475569; /* Подписи */
+  --color-text-tertiary:  #94A3B8; /* Плейсхолдеры, disabled. ВНИМАНИЕ: 2.56:1 на белом — только для нечитаемого декоративного текста */
+  --color-text-inverse:   #FFFFFF; /* Текст на тёмном */
+
+  /* ---- Границы ---- */
+  --color-border-default: #E2E8F0;
+  --color-border-focus:   #2563EB; /* Фокус: обводка 2px (WCAG 2.1 AA) */
+
+  /* ---- Акценты ---- */
+  --color-accent-primary:       #2563EB;
+  --color-accent-primary-hover: #1D4ED8;
+  --color-accent-secondary:     #7C3AED;
+
+  /* ---- Семантика ---- */
+  --color-semantic-success: #16A34A;
+  --color-semantic-warning: #F59E0B; /* текст на нём — только тёмный #0F172A (8.3:1) */
+  --color-semantic-error:   #DC2626;
+  --color-semantic-info:    #0EA5E9; /* текст на нём — только тёмный #0F172A (6.4:1) */
+
+  /* ---- Эмоции (шкала 0–10) ---- */
+  --color-emotion-low:  #DC2626; /* 0–3  */
+  --color-emotion-mid:  #F59E0B; /* 4–6  */
+  --color-emotion-high: #16A34A; /* 7–10 */
+
+  /* ---- Навыки ---- */
+  --color-skill-active-listening: #2563EB;
+  --color-skill-empathy:          #7C3AED;
+  --color-skill-boundaries:       #0891B2;
+  --color-skill-emotion-work:     #DB2777;
+  --color-skill-structuring:      #65A30D;
+  --color-skill-resistance:       #EA580C;
+  --color-skill-questioning:      #0EA5E9;
+  --color-skill-reflection:       #9333EA;
+
+  /* ---- Тёмная тема (Mini App + клиентские экраны) ---- */
+  --color-dark-bg-primary:      #0B1220;
+  --color-dark-bg-secondary:    #111827;
+  --color-dark-text-primary:    #F8FAFC;
+  --color-dark-text-secondary:  #CBD5E1;
+  --color-dark-border-default:  #1F2937;
+  /* Акценты и семантика — те же, что в светлой теме */
+
+  /* ---- Типографика: шкала ---- */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-display-size: 40px; --text-display-lh: 48px; --text-display-weight: 700; /* Hero */
+  --text-h1-size: 32px; --text-h1-lh: 40px; --text-h1-weight: 700;   /* Заголовок страницы */
+  --text-h2-size: 24px; --text-h2-lh: 32px; --text-h2-weight: 600;   /* Заголовок секции */
+  --text-h3-size: 20px; --text-h3-lh: 28px; --text-h3-weight: 600;   /* Заголовок карточки */
+  --text-body-lg-size: 18px; --text-body-lg-lh: 28px; --text-body-lg-weight: 400;
+  --text-body-size: 16px; --text-body-lh: 24px; --text-body-weight: 400;
+  --text-body-sm-size: 14px; --text-body-sm-lh: 20px; --text-body-sm-weight: 400;
+  --text-caption-size: 12px; --text-caption-lh: 16px; --text-caption-weight: 500;
+  --text-button-size: 16px; --text-button-lh: 24px; --text-button-weight: 600;
+
+  /* ---- Spacing (шкала 4px): space/1 … space/9 ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* ---- Радиусы ---- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ---- Тени ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+
+  /* ---- Motion ---- */
+  --motion-fast: 150ms;   /* ховеры, фокус · ease-out */
+  --motion-base: 250ms;   /* переходы, модалки · ease-in-out */
+  --motion-slow: 400ms;   /* крупные переходы · ease-in-out */
+  --motion-spring: 500ms; /* появление карточек · cubic-bezier(0.34,1.56,0.64,1) */
+  --ease-out: cubic-bezier(0, 0, 0.58, 1);
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Размеры ---- */
+  --size-button-sm: 32px;
+  --size-button-md: 40px;
+  --size-button-lg: 48px;
+  --size-tap-target: 44px;  /* минимальная кликабельная зона WCAG */
+  --tma-safe-top: 56px;     /* Telegram header */
+  --tma-safe-bottom: 80px;  /* MainButton */
+}
+
+/* ---- Тёмная тема: применение ----
+   <html data-theme="dark"> или media (prefers-color-scheme: dark) в TMA */
+[data-theme="dark"] {
+  --color-bg-primary:   var(--color-dark-bg-primary);
+  --color-bg-secondary: var(--color-dark-bg-secondary);
+  --color-text-primary: var(--color-dark-text-primary);
+  --color-text-secondary: var(--color-dark-text-secondary);
+  --color-border-default: var(--color-dark-border-default);
+}
+
+/* ============================================================================
+   Маппинг на Tailwind (пример для tailwind.config.js):
+
+   colors: {
+     bg:    { primary: '#FFFFFF', secondary: '#F7F8FA', tertiary: '#EEF0F4', inverse: '#0F172A' },
+     text:  { primary: '#0F172A', secondary: '#475569', tertiary: '#94A3B8', inverse: '#FFFFFF' },
+     border:{ default: '#E2E8F0', focus: '#2563EB' },
+     accent:{ primary: '#2563EB', 'primary-hover': '#1D4ED8', secondary: '#7C3AED' },
+     success:'#16A34A', warning:'#F59E0B', error:'#DC2626', info:'#0EA5E9',
+     emotion:{ low:'#DC2626', mid:'#F59E0B', high:'#16A34A' },
+     skill: { 'active-listening':'#2563EB', empathy:'#7C3AED', boundaries:'#0891B2',
+              'emotion-work':'#DB2777', structuring:'#65A30D', resistance:'#EA580C',
+              questioning:'#0EA5E9', reflection:'#9333EA' },
+     'dark-bg': { primary:'#0B1220', secondary:'#111827' },
+   },
+   fontFamily: { sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                 mono: ['JetBrains Mono', ...defaultTheme.fontFamily.mono] },
+   borderRadius: { xs:'4px', sm:'8px', md:'12px', lg:'16px', xl:'24px' },
+   boxShadow: { sm:'0 1px 2px rgba(0,0,0,0.05)', md:'0 4px 12px rgba(0,0,0,0.08)',
+                lg:'0 12px 32px rgba(0,0,0,0.12)' },
+   ========================================================================== */

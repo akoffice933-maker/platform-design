@@ -1,0 +1,138 @@
+{
+  "$description": "Platform Design — дизайн-токены для обучающе-симуляционной платформы для психологов + терапевтических игр. Формат: W3C Design Tokens (DTCG). Импорт в Penpot: нативная поддержка design tokens (File → Design Tokens) или плагин 'Penpot Tokens'. Соответствует разделу 3 ТЗ на дизайн-макеты v1.0.",
+  "$extensions": {
+    "platform.meta": {
+      "version": "1.0.0",
+      "font": "Inter",
+      "monoFont": "JetBrains Mono",
+      "grids": {
+        "desktop": { "frame": 1440, "content": 1200, "columns": 12, "gutter": 24, "margin": 120, "breakpoints": [1440, 1280, 1024] },
+        "tablet": { "frame": 768, "columns": 8, "gutter": 16, "margin": 32 },
+        "mobile": { "frame": 390, "columns": 4, "gutter": 16, "margin": 16 },
+        "tma": { "frame": 390, "safeAreaTop": 56, "safeAreaBottom": 80, "note": "Telegram Mini App: только 390px" }
+      }
+    }
+  },
+
+  "color": {
+    "bg": {
+      "primary":   { "$type": "color", "$value": "#FFFFFF", "$description": "Основной фон" },
+      "secondary": { "$type": "color", "$value": "#F7F8FA", "$description": "Фон карточек, секций" },
+      "tertiary":  { "$type": "color", "$value": "#EEF0F4", "$description": "Ховеры, разделители" },
+      "inverse":   { "$type": "color", "$value": "#0F172A", "$description": "Тёмный фон (опц.)" }
+    },
+    "text": {
+      "primary":   { "$type": "color", "$value": "#0F172A", "$description": "Заголовки, основной текст" },
+      "secondary": { "$type": "color", "$value": "#475569", "$description": "Подписи" },
+      "tertiary":  { "$type": "color", "$value": "#94A3B8", "$description": "Плейсхолдеры, disabled" },
+      "inverse":   { "$type": "color", "$value": "#FFFFFF", "$description": "Текст на тёмном" }
+    },
+    "border": {
+      "default": { "$type": "color", "$value": "#E2E8F0", "$description": "Границы" },
+      "focus":   { "$type": "color", "$value": "#2563EB", "$description": "Фокус (обводка 2px, WCAG)" }
+    },
+    "accent": {
+      "primary":       { "$type": "color", "$value": "#2563EB", "$description": "CTA, ссылки" },
+      "primary-hover": { "$type": "color", "$value": "#1D4ED8", "$description": "Ховер CTA" },
+      "secondary":     { "$type": "color", "$value": "#7C3AED", "$description": "Вторичный акцент" }
+    },
+    "semantic": {
+      "success": { "$type": "color", "$value": "#16A34A", "$description": "Успех" },
+      "warning": { "$type": "color", "$value": "#F59E0B", "$description": "Предупреждение" },
+      "error":   { "$type": "color", "$value": "#DC2626", "$description": "Ошибка" },
+      "info":    { "$type": "color", "$value": "#0EA5E9", "$description": "Инфо" }
+    },
+    "emotion": {
+      "low":  { "$type": "color", "$value": "#DC2626", "$description": "Эмоция 0–3" },
+      "mid":  { "$type": "color", "$value": "#F59E0B", "$description": "Эмоция 4–6" },
+      "high": { "$type": "color", "$value": "#16A34A", "$description": "Эмоция 7–10" }
+    },
+    "skill": {
+      "active-listening": { "$type": "color", "$value": "#2563EB", "$description": "Навык: активное слушание" },
+      "empathy":          { "$type": "color", "$value": "#7C3AED", "$description": "Навык: эмпатия" },
+      "boundaries":       { "$type": "color", "$value": "#0891B2", "$description": "Навык: границы" },
+      "emotion-work":     { "$type": "color", "$value": "#DB2777", "$description": "Навык: работа с эмоциями" },
+      "structuring":      { "$type": "color", "$value": "#65A30D", "$description": "Навык: структурирование" },
+      "resistance":       { "$type": "color", "$value": "#EA580C", "$description": "Навык: работа с сопротивлением" },
+      "questioning":      { "$type": "color", "$value": "#0EA5E9", "$description": "Навык: вопрошание" },
+      "reflection":       { "$type": "color", "$value": "#9333EA", "$description": "Навык: рефлексия" }
+    },
+    "dark": {
+      "$description": "Тёмная тема — обязательна для Mini App и клиентских экранов. Акценты — те же (color/accent, color/semantic).",
+      "bg": {
+        "primary":   { "$type": "color", "$value": "#0B1220", "$description": "Основной фон (dark)" },
+        "secondary": { "$type": "color", "$value": "#111827", "$description": "Фон карточек (dark)" }
+      },
+      "text": {
+        "primary":   { "$type": "color", "$value": "#F8FAFC", "$description": "Основной текст (dark)" },
+        "secondary": { "$type": "color", "$value": "#CBD5E1", "$description": "Подписи (dark)" }
+      },
+      "border": {
+        "default": { "$type": "color", "$value": "#1F2937", "$description": "Границы (dark)" }
+      }
+    }
+  },
+
+  "typography": {
+    "$description": "Шрифт Inter (открытый, обязателен для Penpot). Все размеры — как text styles, не отдельными слоями.",
+    "display": { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 700, "fontSize": "40px", "lineHeight": "48px", "letterSpacing": "0em" }, "$description": "Hero" },
+    "h1":      { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 700, "fontSize": "32px", "lineHeight": "40px" }, "$description": "Заголовок страницы" },
+    "h2":      { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 600, "fontSize": "24px", "lineHeight": "32px" }, "$description": "Заголовок секции" },
+    "h3":      { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 600, "fontSize": "20px", "lineHeight": "28px" }, "$description": "Заголовок карточки" },
+    "body-lg": { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 400, "fontSize": "18px", "lineHeight": "28px" }, "$description": "Крупный текст" },
+    "body":    { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 400, "fontSize": "16px", "lineHeight": "24px" }, "$description": "Основной текст" },
+    "body-sm": { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 400, "fontSize": "14px", "lineHeight": "20px" }, "$description": "Подписи" },
+    "caption": { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 500, "fontSize": "12px", "lineHeight": "16px" }, "$description": "Мета, лейблы" },
+    "button":  { "$type": "typography", "$value": { "fontFamily": ["Inter"], "fontWeight": 600, "fontSize": "16px", "lineHeight": "24px" }, "$description": "Кнопки" },
+    "mono":    { "$type": "typography", "$value": { "fontFamily": ["JetBrains Mono"], "fontWeight": 400, "fontSize": "14px", "lineHeight": "20px" }, "$description": "Коды доступа (monospace)" }
+  },
+
+  "space": {
+    "$description": "Шкала 4px. Токены space/1…space/9.",
+    "1": { "$type": "dimension", "$value": "4px" },
+    "2": { "$type": "dimension", "$value": "8px" },
+    "3": { "$type": "dimension", "$value": "12px" },
+    "4": { "$type": "dimension", "$value": "16px" },
+    "5": { "$type": "dimension", "$value": "24px" },
+    "6": { "$type": "dimension", "$value": "32px" },
+    "7": { "$type": "dimension", "$value": "48px" },
+    "8": { "$type": "dimension", "$value": "64px" },
+    "9": { "$type": "dimension", "$value": "96px" }
+  },
+
+  "radius": {
+    "xs":   { "$type": "dimension", "$value": "4px" },
+    "sm":   { "$type": "dimension", "$value": "8px" },
+    "md":   { "$type": "dimension", "$value": "12px" },
+    "lg":   { "$type": "dimension", "$value": "16px" },
+    "xl":   { "$type": "dimension", "$value": "24px" },
+    "full": { "$type": "dimension", "$value": "9999px", "$description": "Капсула / круг" }
+  },
+
+  "shadow": {
+    "sm": { "$type": "shadow", "$value": { "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px", "color": "rgba(0, 0, 0, 0.05)" } },
+    "md": { "$type": "shadow", "$value": { "offsetX": "0px", "offsetY": "4px", "blur": "12px", "spread": "0px", "color": "rgba(0, 0, 0, 0.08)" } },
+    "lg": { "$type": "shadow", "$value": { "offsetX": "0px", "offsetY": "12px", "blur": "32px", "spread": "0px", "color": "rgba(0, 0, 0, 0.12)" } }
+  },
+
+  "motion": {
+    "fast":   { "$type": "duration", "$value": "150ms", "$description": "Ховеры, фокус. Кривая: ease-out" },
+    "base":   { "$type": "duration", "$value": "250ms", "$description": "Переходы, модалки. Кривая: ease-in-out" },
+    "slow":   { "$type": "duration", "$value": "400ms", "$description": "Крупные переходы. Кривая: ease-in-out" },
+    "spring": { "$type": "duration", "$value": "500ms", "$description": "Появление карточек. Кривая: cubic-bezier(0.34, 1.56, 0.64, 1)" }
+  },
+  "easing": {
+    "ease-out":    { "$type": "cubicBezier", "$value": [0, 0, 0.58, 1] },
+    "ease-in-out": { "$type": "cubicBezier", "$value": [0.42, 0, 0.58, 1] },
+    "spring":      { "$type": "cubicBezier", "$value": [0.34, 1.56, 0.64, 1] }
+  },
+
+  "sizing": {
+    "$description": "Ключевые размеры из ТЗ: кнопки, кликабельные зоны, иконки, safe area TMA.",
+    "button": { "sm": { "$type": "dimension", "$value": "32px" }, "md": { "$type": "dimension", "$value": "40px" }, "lg": { "$type": "dimension", "$value": "48px" } },
+    "tapTarget": { "$type": "dimension", "$value": "44px", "$description": "Минимальная кликабельная зона (WCAG)" },
+    "icon": { "s16": { "$type": "dimension", "$value": "16px" }, "s20": { "$type": "dimension", "$value": "20px" }, "s24": { "$type": "dimension", "$value": "24px" }, "s32": { "$type": "dimension", "$value": "32px" } },
+    "tmaHeader": { "$type": "dimension", "$value": "56px", "$description": "Safe area сверху (Telegram header)" },
+    "tmaMainButton": { "$type": "dimension", "$value": "80px", "$description": "Safe area снизу (MainButton)" }
+  }
+}

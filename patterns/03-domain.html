@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Design · 03_Patterns · Domain components · v1.0</title>
+<style>
+  :root{
+    --bg:#fff; --bg2:#F7F8FA; --bg3:#EEF0F4; --ink:#0F172A; --ink2:#475569; --ink3:#94A3B8;
+    --bd:#E2E8F0; --acc:#2563EB; --acc2:#7C3AED; --ok:#16A34A; --warn:#F59E0B; --err:#DC2626; --info:#0EA5E9;
+    --r-sm:8px; --r-md:12px; --r-lg:16px;
+    --sh-md:0 4px 12px rgba(0,0,0,.08); --sh-lg:0 12px 32px rgba(0,0,0,.12);
+    --f:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --fm:ui-monospace,'JetBrains Mono','SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--f);color:var(--ink);background:var(--bg2);line-height:1.5;font-size:16px}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 24px 96px}
+  header.hero{background:#fff;border-bottom:1px solid var(--bd);padding:48px 0 32px;margin-bottom:40px}
+  .chip-top{display:inline-flex;align-items:center;gap:6px;background:#EEF2FF;color:var(--acc);border:1px solid #C7D7FE;border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:600}
+  .chip-top.gray{background:var(--bg3);color:var(--ink2);border-color:var(--bd)}
+  h1{font-size:40px;line-height:48px;font-weight:700;margin:16px 0 8px}
+  .sub{font-size:18px;color:var(--ink2);max-width:820px}
+  section{background:#fff;border:1px solid var(--bd);border-radius:var(--r-lg);padding:40px;margin-top:32px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  h2{font-size:24px;font-weight:600;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h2 .tok{font-size:12px;font-weight:500;color:var(--ink3);font-family:var(--fm)}
+  .desc{color:var(--ink2);font-size:14px;margin-top:6px;max-width:800px}
+  .row{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;margin-top:24px}
+  .spec{display:flex;flex-direction:column;gap:8px}
+  .cap{font-size:11px;color:var(--ink3);font-family:var(--fm)}
+  /* карточки */
+  .card{background:#fff;border:1px solid var(--bd);border-radius:var(--r-md);box-shadow:var(--sh-md)}
+  .sc{width:320px;padding:16px}
+  .sc h3{font-size:16px;font-weight:600}
+  .sc p{font-size:13px;color:var(--ink2);margin-top:6px}
+  .meta{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;color:var(--ink2)}
+  .dots{display:inline-flex;gap:6px}
+  .dots i{width:8px;height:8px;border-radius:50%;background:var(--bg3)}
+  .dots i.on{background:var(--acc)}
+  .dotrow{display:inline-flex;gap:6px}
+  .dotrow i{width:7px;height:7px;border-radius:50%;background:var(--bg3)}
+  .dotrow i.on{background:var(--acc)}
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:9999px;font-weight:500;border:1px solid var(--bd);background:#fff}
+  .chip.sm{height:24px;padding:0 8px;font-size:11px}
+  .chip .dot{width:8px;height:8px;border-radius:50%}
+  .chip.nob{border:none}
+  .foot{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+  .foot .st{font-size:12px;color:var(--ink3)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:9999px;font-family:var(--f);font-weight:600;cursor:pointer;height:32px;padding:0 14px;font-size:13px}
+  .btn.primary{background:var(--acc);color:#fff}
+  .btn.secondary{background:#fff;border-color:var(--bd);color:var(--ink2)}
+  .btn.secondary.danger{color:var(--err);border-color:#FECACA}
+  .btn.disabled{background:var(--bg3);color:var(--ink3);cursor:not-allowed}
+  .sc.locked{background:var(--bg2);box-shadow:none}
+  .sc.compact{width:300px;padding:14px;box-shadow:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .sc.compact .l{display:flex;flex-direction:column;gap:6px}
+  .gc{width:300px;padding:16px}
+  .cac{width:340px;padding:16px}
+  .cac .head{display:flex;justify-content:space-between;align-items:center}
+  .cac .head b{font-size:14px}
+  .cac .game{font-size:13px;color:var(--ink2);margin-top:6px}
+  .cac .meta{margin-top:12px;gap:16px}
+  .cac .meta span{display:inline-flex;align-items:center;gap:6px}
+  .cac .btns{display:flex;gap:12px;margin-top:14px}
+  .st-chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:9999px;font-size:11px;font-weight:500}
+  /* пузыри */
+  .bub{max-width:440px;border-radius:12px;padding:12px 16px;font-size:14px}
+  .bub.left{background:var(--bg2);color:var(--ink)}
+  .bub.right{background:var(--acc);color:#fff;margin-left:auto;max-width:400px}
+  .bubrow{display:flex;flex-direction:column;gap:6px;width:100%}
+  .bubmeta{display:flex;align-items:center;gap:6px;font-size:11px}
+  .bubmeta .emo{color:var(--err);font-weight:500;display:inline-flex;align-items:center;gap:5px}
+  .bubmeta .tm{margin-left:auto;color:var(--ink3)}
+  .bub.right + .bubmeta{justify-content:flex-end}
+  .ei-c{display:flex;align-items:center;gap:10px;border:1px solid var(--bd);border-radius:10px;background:#fff;padding:8px 14px;width:200px}
+  .ei-c b{font-size:14px;display:block}
+  .ei-c span{font-size:11px;color:var(--err)}
+  .ei-c .edot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--err)}
+  .ei-e{border:1px solid var(--bd);border-radius:10px;background:#fff;padding:12px 14px;width:100%;max-width:560px}
+  .ei-e .hd{display:flex;justify-content:space-between;align-items:baseline}
+  .ei-e .hd span{font-size:12px;color:var(--ink2)}
+  .ei-e .hd b{font-size:16px}
+  .scale{display:flex;gap:4px;margin-top:10px}
+  .scale i{flex:1;height:12px;border-radius:3px;background:var(--bg3)}
+  .scale i.lo{background:var(--err)}
+  .scale i.lo.dim{opacity:.35}
+  .scale i.md{opacity:.35}.scale i.md.on{opacity:.9}
+  .scale i.hi{opacity:.35}
+  .eileg{display:flex;gap:18px;margin-top:8px;font-size:10px;color:var(--ink3)}
+  /* AnswerOption */
+  .ao{width:100%;max-width:470px;border:1px solid var(--bd);border-radius:12px;background:#fff;padding:9px 14px 11px;font-size:12px;position:relative}
+  .ao .tech{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;border-radius:9999px;border:1px solid var(--bd);background:#fff;font-size:11px;font-weight:500;color:#1D4ED8;margin-top:8px}
+  .ao .tech i{width:8px;height:8px;border-radius:50%;background:var(--acc)}
+  .ao.selected{background:#EFF6FF;border-color:var(--acc);border-width:2px}
+  .ao.correct{background:#F0FDF4;border-color:var(--ok);border-width:2px}
+  .ao.wrong{background:#FEF2F2;border-color:var(--err);border-width:2px}
+  .ao .verdict{position:absolute;top:8px;right:12px;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600}
+  .ao.correct .verdict{color:var(--ok)}.ao.wrong .verdict{color:var(--err)}
+  .ao.crit{background:var(--err);border:1px solid var(--err);color:#fff;padding:10px 14px 12px 44px}
+  .ao.crit b{font-size:13px;display:block}
+  .ao.crit span{font-size:11px;color:#FECACA}
+  .ao.crit .oct{position:absolute;left:12px;top:20px}
+  .tehtag{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 14px;border-radius:9999px;background:#EFF6FF;border:1px solid #BFDBFE;font-size:12px;font-weight:500;color:#1D4ED8}
+  .ceb{display:flex;gap:14px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:12px 16px;max-width:560px;border-left:4px solid var(--err)}
+  .ceb b{color:#991B1B;font-size:14px;display:block}
+  .ceb p{font-size:12px;color:#991B1B;margin-top:4px}
+  /* skills */
+  .ssc{width:280px;border:1px solid var(--bd);border-radius:12px;background:#fff;padding:14px 16px}
+  .ssc .hd{display:flex;justify-content:space-between;align-items:baseline}
+  .ssc .hd b{font-size:14px}.ssc .hd span{font-size:16px;font-weight:600}
+  .ssc .bar{height:8px;background:var(--bg3);border-radius:4px;margin-top:12px;overflow:hidden}
+  .ssc .bar i{display:block;height:100%;border-radius:4px}
+  .ssc .gr{font-size:11px;color:var(--ok);margin-top:6px}
+  .radar{position:relative;width:280px}
+  .radar .lbl{position:absolute;font-size:10px;font-weight:500;color:var(--ink2)}
+  /* прочее */
+  .sp{border:1px solid var(--bd);border-radius:12px;background:#fff}
+  .sp.prog{display:flex;align-items:center;gap:14px;padding:12px 16px;width:420px}
+  .sp.prog .bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+  .sp.prog .bar i{display:block;width:43%;height:100%;background:var(--acc)}
+  .sp.prog .cap2{font-size:11px;color:var(--ink3);font-weight:500;letter-spacing:.04em}
+  .sp.prog .name{font-size:12px;font-weight:600}
+  .sp.prog .pause{width:32px;height:32px;border:1px solid var(--bd);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg2)}
+  .sp.load{display:flex;align-items:center;gap:16px;padding:20px;width:260px}
+  .spin{width:28px;height:28px;border-radius:50%;border:4px solid var(--bg3);border-top-color:var(--acc);animation:rot 1s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  .sp.load .t b{font-size:13px;color:var(--ink2);font-weight:400;display:block}
+  .sp.load .t span{font-size:11px;color:var(--ink3)}
+  .coach{width:320px;background:var(--ink);border-radius:12px;padding:20px;color:#fff;box-shadow:var(--sh-lg)}
+  .coach .st{font-size:10px;font-weight:500;color:#93C5FD;letter-spacing:.06em}
+  .coach h3{font-size:16px;margin-top:8px}
+  .coach p{font-size:12px;color:#CBD5E1;margin-top:8px}
+  .coach .foot{display:flex;align-items:center;gap:16px;margin-top:16px;justify-content:flex-start}
+  .coach .skip{font-size:12px;color:#94A3B8;font-weight:500}
+  .consent{width:360px;border:1px solid var(--bd);border-radius:12px;background:#fff;padding:16px}
+  .consent .cb{display:flex;gap:10px;font-size:13px}
+  .consent .box{width:20px;height:20px;border-radius:6px;background:var(--acc);display:flex;align-items:center;justify-content:center;flex:none}
+  .consent .links{margin-top:14px;font-size:12px;color:var(--ink3)}
+  .consent .links a{display:block;color:var(--acc);font-weight:500;text-decoration:none;margin-top:6px}
+  .code{width:280px;border:1px solid var(--bd);border-radius:12px;background:#fff;padding:16px;box-shadow:var(--sh-md)}
+  .code .lab{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:.06em}
+  .code .val{font-family:var(--fm);font-size:32px;font-weight:600;margin-top:8px}
+  .code .nt{font-size:11px;color:var(--ink3);margin-top:8px}
+  .code .btn{margin-top:10px}
+  .deep{width:380px;border:1px solid var(--bd);border-radius:12px;background:#fff;padding:16px}
+  .deep .url{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .deep .url .u{flex:1;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;height:32px;display:flex;align-items:center;padding:0 10px;font-family:var(--fm);font-size:12px;color:var(--acc)}
+  .deep .url .cp{width:32px;height:32px;border:1px solid var(--bd);border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff}
+  .deep .qr{position:absolute;right:16px;top:16px}
+  .deep .nt{font-size:11px;color:var(--ink3);margin-top:10px}
+  .deep{position:relative}
+  .empty{width:300px;background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:36px 24px;text-align:center}
+  .empty h3{font-size:16px}
+  .empty p{font-size:12px;color:var(--ink2);margin-top:8px}
+  .empty .btn{margin-top:16px}
+  .vb{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:9999px;font-size:12px;font-weight:500}
+  .vstack{display:flex;flex-direction:column;gap:10px}
+  .svc{width:460px;border:1px solid var(--bd);border-radius:12px;background:#fff;padding:16px}
+  .svc .hd{display:flex;gap:12px;align-items:center}
+  .svc .ava{width:36px;height:36px;border-radius:50%;background:var(--acc2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+  .svc .hd b{font-size:13px;display:block}
+  .svc .hd span{font-size:11px;color:var(--ink3)}
+  .svc .quote{border-left:3px solid var(--acc2);margin-top:14px;padding-left:14px;font-size:12px;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
+  .audit{width:100%;max-width:620px;display:flex;align-items:center;gap:12px;border:1px solid var(--bd);border-radius:10px;background:#fff;padding:10px 16px;font-size:12px}
+  .audit .who{font-weight:500}
+  .audit .act{color:var(--ink2)}
+  .audit .ent{color:var(--acc);font-weight:500}
+  .audit .tm{margin-left:auto;color:var(--ink3);font-size:11px}
+  /* TMA */
+  .tma{width:390px;background:#fff;border:1px solid var(--bd);overflow:hidden;border-radius:0}
+  .tma .nav{display:flex;height:64px;border-top:1px solid var(--bd);background:#fff}
+  .tma .nav .it{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9px;color:var(--ink3)}
+  .tma .nav .it.act{color:var(--acc);font-weight:600}
+  .tma .mainbtn{height:80px;border-top:1px solid var(--bd);padding:10px 16px 0;position:relative}
+  .tma .mainbtn .b{height:44px;border-radius:22px;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600}
+  .tma .mainbtn.dis .b{background:var(--bg3);color:var(--ink3)}
+  .tma .mainbtn .sa{position:absolute;left:16px;bottom:3px;font-size:9px;color:var(--ink3)}
+  footer{margin-top:48px;text-align:center;color:var(--ink3);font-size:13px}
+  .kbd{background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:1px 6px;font-size:12px;font-family:var(--fm)}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap" style="padding-bottom:0">
+    <span class="chip-top">● Platform Design</span>
+    <span class="chip-top gray">Итерация 3: доменные компоненты — готово</span>
+    <h1>03_Patterns · Domain components</h1>
+    <p class="sub">Доменные компоненты ТЗ 4.2: карточки сценариев и игр, доступы клиентов, чат симулятора с эмоциями, варианты ответов, навыки, TMA-компоненты. Генерируются плагином Platform Builder v0.3 (борд <span class="kbd">03_Patterns / Domain</span>). Радар и QR — статичные SVG-плейсхолдеры.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ===== Scenario / Game / Access ===== -->
+<section>
+  <h2>ScenarioCard · GameCard · ClientAccessCard <span class="tok">default / compact / locked · статусы доступов</span></h2>
+  <div class="row">
+    <div class="spec">
+      <div class="card sc">
+        <h3>Работа с сопротивлением</h3>
+        <p>Клиент избегает темы и переводит разговор. Отработайте навык распознавания и работы с сопротивлением.</p>
+        <div class="meta"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span> сложность 4/5</div>
+        <div class="meta"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 6v6l4 2" /> <circle cx="12" cy="12" r="10" /> </svg> 15 мин</div>
+        <div class="meta" style="gap:8px">
+          <span class="chip sm"><span class="dot" style="background:#EA580C"></span>сопротивление</span>
+          <span class="chip sm"><span class="dot" style="background:#0891B2"></span>границы</span>
+        </div>
+        <div class="foot"><span class="st">Не пройден</span><button class="btn primary">Начать</button></div>
+      </div>
+      <span class="cap">default · 320px</span>
+    </div>
+    <div class="spec">
+      <div class="card sc compact">
+        <div class="l"><b style="font-size:14px">Активное слушание</b>
+          <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--ink3)"><span class="dotrow"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span> · 10 мин</span></div>
+        <button class="btn secondary">Начать</button>
+      </div>
+      <span class="cap">compact · 300px</span>
+    </div>
+    <div class="spec">
+      <div class="card sc locked">
+        <h3 style="color:var(--ink2);display:flex;align-items:center;gap:8px"><svg class="lucide lucide-lock" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /> </svg> Границы и контракт</h3>
+        <p style="color:var(--ink3)">Сценарий будет доступен после прохождения «Активное слушание».</p>
+        <div class="meta"><span class="dots"><i></i><i></i><i></i><i></i><i></i></span> сложность 3/5</div>
+        <div class="meta"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 6v6l4 2" /> <circle cx="12" cy="12" r="10" /> </svg> 20 мин</div>
+        <div class="foot"><span class="st">Пройдите предыдущий сценарий</span><button class="btn disabled">Закрыто</button></div>
+      </div>
+      <span class="cap">locked · недоступен</span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="spec">
+      <div class="card gc">
+        <div style="display:flex;gap:8px">
+          <span class="chip sm nob" style="background:#E0F2FE;color:#0C4A6E">Упражнение</span>
+          <span class="chip sm nob" style="background:#FEF3C7;color:#92400E">Тревога</span>
+        </div>
+        <h3 style="margin-top:12px">Дыхание 4-7-8</h3>
+        <p>Техника дыхания для снижения тревоги.</p>
+        <div class="meta" style="gap:16px"><span><svg class="lucide lucide-timer" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <line x1="10" x2="14" y1="2" y2="2" /> <line x1="12" x2="15" y1="14" y2="11" /> <circle cx="12" cy="14" r="8" /> </svg> 5 мин</span><span><svg class="lucide lucide-users" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path d="M16 3.128a4 4 0 0 1 0 7.744" /> <path d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle cx="9" cy="7" r="4" /> </svg> 12 клиентов</span></div>
+        <div class="foot"><button class="btn primary" style="width:100%"><svg class="lucide lucide-send" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" /> <path d="m21.854 2.147-10.94 10.939" /> </svg> Выдать клиенту</button></div>
+      </div>
+      <span class="cap">GameCard</span>
+    </div>
+    <div class="spec">
+      <div class="card cac">
+        <div class="head"><b>Клиент А</b><span class="st-chip" style="background:#DCFCE7;color:#166534"><svg class="lucide lucide-circle-check" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="m9 12 2 2 4-4" /> </svg> активен</span></div>
+        <div class="game">Игра: Дневник эмоций</div>
+        <div class="meta"><span><svg class="lucide lucide-calendar" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M8 2v4" /> <path d="M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18" /> </svg> до 30.09.2026</span><span><svg class="lucide lucide-key-round" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /> </svg> входы 3/5</span></div>
+        <div class="btns"><button class="btn secondary"><svg class="lucide lucide-link-2" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M9 17H7A5 5 0 0 1 7 7h2" /> <path d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line x1="8" x2="16" y1="12" y2="12" /> </svg> Копировать ссылку</button><button class="btn secondary danger"><svg class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 6 6 18" /> <path d="m6 6 12 12" /> </svg> Отозвать</button></div>
+      </div>
+      <span class="cap">ClientAccessCard / active</span>
+    </div>
+    <div class="spec">
+      <div class="card cac">
+        <div class="head"><b>Клиент Б</b><span class="st-chip" style="background:#FEF3C7;color:#92400E"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 6v6l4 2" /> <circle cx="12" cy="12" r="10" /> </svg> истёк</span></div>
+        <div class="game">Игра: Дыхание 4-7-8</div>
+        <div class="meta"><span><svg class="lucide lucide-calendar" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M8 2v4" /> <path d="M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18" /> </svg> до 12.09.2026</span><span><svg class="lucide lucide-key-round" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /> </svg> входы 5/5</span></div>
+        <div class="btns"><button class="btn secondary"><svg class="lucide lucide-link-2" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M9 17H7A5 5 0 0 1 7 7h2" /> <path d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line x1="8" x2="16" y1="12" y2="12" /> </svg> Копировать ссылку</button><button class="btn secondary danger"><svg class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 6 6 18" /> <path d="m6 6 12 12" /> </svg> Отозвать</button></div>
+      </div>
+      <span class="cap">ClientAccessCard / expired</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Bubbles + Emotion ===== -->
+<section>
+  <h2>ClientMessageBubble · EmotionIndicator <span class="tok">left / right · шкала 0–10 = иконка + цвет + текст</span></h2>
+  <p class="desc">Эмоция передаётся тремя способами сразу (WCAG 8.1): иконкой, цветом и текстом. Правый пузырь — реплика психолога (белый на accent = 5.2:1 AA).</p>
+  <div class="row">
+    <div class="spec" style="width:100%;max-width:560px">
+      <div class="bubrow">
+        <div class="bub left">Я не знаю, с чего начать… Как будто всё идёт не так, и я уже не справляюсь.</div>
+        <div class="bubmeta"><span class="emo"><svg class="lucide lucide-frown" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="M16 16s-1.5-2-4-2-4 2-4 2" /> <line x1="9" x2="9.01" y1="9" y2="9" /> <line x1="15" x2="15.01" y1="9" y2="9" /> </svg> эмоция 3/10 · низкий фон</span><span class="tm">14:02</span></div>
+        <div class="bub right">Расскажите, что вы чувствуете, когда говорите об этом?</div>
+        <div class="bubmeta"><span class="tm">14:03</span></div>
+      </div>
+      <span class="cap">ClientMessageBubble / left + right</span>
+    </div>
+    <div class="spec">
+      <div class="ei-c"><svg class="lucide lucide-frown" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="M16 16s-1.5-2-4-2-4 2-4 2" /> <line x1="9" x2="9.01" y1="9" y2="9" /> <line x1="15" x2="15.01" y1="9" y2="9" /> </svg><div><b>3/10</b><span>низкий фон</span></div><span class="edot"></span></div>
+      <span class="cap">EmotionIndicator / compact</span>
+    </div>
+    <div class="spec" style="width:100%;max-width:560px">
+      <div class="ei-e">
+        <div class="hd"><span>Эмоциональный фон клиента</span><b>3/10</b></div>
+        <div class="scale">
+          <i class="lo"></i><i class="lo"></i><i class="lo"></i>
+          <i class="md"></i><i class="md"></i><i class="md"></i>
+          <i class="hi"></i><i class="hi"></i><i class="hi"></i><i class="hi"></i>
+        </div>
+        <div class="eileg"><span>0–3 низкий</span><span>4–6 средний</span><span>7–10 высокий</span><svg class="lucide lucide-frown" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="M16 16s-1.5-2-4-2-4 2-4 2" /> <line x1="9" x2="9.01" y1="9" y2="9" /> <line x1="15" x2="15.01" y1="9" y2="9" /> </svg></div>
+      </div>
+      <span class="cap">EmotionIndicator / extended</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== AnswerOption ===== -->
+<section>
+  <h2>AnswerOption · TechniqueTag · CriticalErrorBanner <span class="tok">5 состояний ответа психолога</span></h2>
+  <div class="row">
+    <div class="spec" style="flex:1;min-width:320px">
+      <div class="ao">Отражаю чувство: «Похоже, сейчас для вас всё слишком»<br><span class="tech"><i></i>активное слушание</span></div>
+      <span class="cap">default</span>
+      <div class="ao selected" style="margin-top:14px">Молчу и киваю, давая клиенту пространство<br><span class="tech"><i></i>выдерживание паузы</span></div>
+      <span class="cap">selected</span>
+      <div class="ao correct" style="margin-top:14px">Отражаю чувство: «Похоже, сейчас для вас всё слишком»<span class="verdict"><svg class="lucide lucide-circle-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="m9 12 2 2 4-4" /> </svg> верно</span><br><span class="tech" style="background:#fff"><i></i>активное слушание</span></div>
+      <span class="cap">correct</span>
+      <div class="ao wrong" style="margin-top:14px">Сразу предлагаю три упражнения на релаксацию<span class="verdict"><svg class="lucide lucide-circle-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" /> </svg> мимо</span><br><span class="tech" style="background:#fff"><i></i>совет без запроса</span></div>
+      <span class="cap">wrong</span>
+      <div class="ao crit" style="margin-top:14px"><svg class="lucide lucide-alert-octagon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 16h.01" /> <path d="M12 8v4" /> <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" /> </svg><b>Критическая ошибка: обесценивание чувств</b><span>Фраза обесценивает переживания клиента. Разбор будет изменён.</span></div>
+      <span class="cap">critical-error</span>
+    </div>
+    <div class="spec">
+      <span class="tehtag"><svg class="lucide lucide-message-circle" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" /> </svg> Активное слушание</span>
+      <span class="cap">TechniqueTag</span>
+      <div class="ceb" style="margin-top:24px"><svg class="lucide lucide-alert-octagon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 16h.01" /> <path d="M12 8v4" /> <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" /> </svg><div><b>Критическая ошибка</b><p>Вы обесценили чувства клиента («это ерунда, успокойтесь»).<br>Сессия завершена. Изучите разбор перед повторной попыткой.</p></div></div>
+      <span class="cap">CriticalErrorBanner</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Skills ===== -->
+<section>
+  <h2>SkillScoreCard · SkillRadarChart <span class="tok">балл 0–100 · радар 8 навыков (статичный SVG)</span></h2>
+  <div class="row">
+    <div class="spec"><div class="ssc"><div class="hd"><b>Эмпатия</b><span>72/100</span></div><div class="bar"><i style="width:72%;background:#7C3AED"></i></div><div class="gr">рост +8 за неделю</div></div><span class="cap">Эмпатия · 72</span></div>
+    <div class="spec"><div class="ssc"><div class="hd"><b>Сопротивление</b><span>49/100</span></div><div class="bar"><i style="width:49%;background:#EA580C"></i></div><div class="gr" style="color:var(--ink3)">без изменений</div></div><span class="cap">Сопротивление · 49</span></div>
+    <div class="spec"><div class="ssc"><div class="hd"><b>Активное слушание</b><span>86/100</span></div><div class="bar"><i style="width:86%;background:#2563EB"></i></div><div class="gr">рост +12 за неделю</div></div><span class="cap">Активное слушание · 86</span></div>
+    <div class="spec">
+      <div class="radar"><svg width="280" height="240" viewBox="0 0 280 240" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="140.0,98.0 155.6,104.4 162.0,120.0 155.6,135.6 140.0,142.0 124.4,135.6 118.0,120.0 124.4,104.4" fill="none" stroke="#E2E8F0" stroke-width="1"/><polygon points="140.0,76.0 171.1,88.9 184.0,120.0 171.1,151.1 140.0,164.0 108.9,151.1 96.0,120.0 108.9,88.9" fill="none" stroke="#E2E8F0" stroke-width="1"/><polygon points="140.0,54.0 186.7,73.3 206.0,120.0 186.7,166.7 140.0,186.0 93.3,166.7 74.0,120.0 93.3,73.3" fill="none" stroke="#E2E8F0" stroke-width="1"/><polygon points="140.0,32.0 202.2,57.8 228.0,120.0 202.2,182.2 140.0,208.0 77.8,182.2 52.0,120.0 77.8,57.8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/><line x1="140" y1="120" x2="140.0" y2="32.0" stroke="#E2E8F0" stroke-width="1"/><line x1="140" y1="120" x2="202.2" y2="57.8" stroke="#E2E8F0" stroke-width="1"/><line x1="140" y1="120" x2="228.0" y2="120.0" stroke="#E2E8F0" stroke-width="1"/><line x1="140" y1="120" x2="202.2" y2="182.2" stroke="#E2E8F0" stroke-width="1"/><line x1="140" y1="120" x2="140.0" y2="208.0" stroke="#E2E8F0" stroke-width="1"/><line x1="140" y1="120" x2="77.8" y2="182.2" stroke="#E2E8F0" stroke-width="1"/><line x1="140" y1="120" x2="52.0" y2="120.0" stroke="#E2E8F0" stroke-width="1"/><line x1="140" y1="120" x2="77.8" y2="57.8" stroke="#E2E8F0" stroke-width="1"/><polygon points="140.0,44.3 184.8,75.2 196.3,120.0 176.1,156.1 140.0,187.8 109.5,150.5 68.7,120.0 97.7,77.7" fill="#2563EB" fill-opacity="0.18" stroke="#2563EB" stroke-width="2"/><text x="140.0" y="8.0" text-anchor="middle" font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif">Слушание</text><text x="217.8" y="40.2" text-anchor="start" font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif">Эмпатия</text><text x="250.0" y="124.0" text-anchor="start" font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif">Границы</text><text x="217.8" y="201.8" text-anchor="start" font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif">Эмоции</text><text x="140.0" y="234.0" text-anchor="middle" font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif">Структура</text><text x="62.2" y="201.8" text-anchor="end" font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif">Сопротивл.</text><text x="30.0" y="124.0" text-anchor="end" font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif">Вопросы</text><text x="62.2" y="40.2" text-anchor="end" font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif">Рефлексия</text></svg></div>
+      <span class="cap">SkillRadarChart · статичный SVG (реализация — на разработчике)</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Session / Loader / Onboarding ===== -->
+<section>
+  <h2>SessionProgress · Loader · OnboardingStep <span class="tok">шаг X/Y · спиннер · коуч-марк</span></h2>
+  <div class="row">
+    <div class="spec"><div class="sp prog"><div style="min-width:210px"><span class="cap2">ШАГ 3 ИЗ 7</span><div class="name" style="margin-top:2px">Уточнение запроса</div></div><div class="bar"><i></i></div><span class="pause"><svg class="lucide lucide-pause" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <rect x="14" y="3" width="5" height="18" rx="1" /> <rect x="5" y="3" width="5" height="18" rx="1" /> </svg></span></div><span class="cap">SessionProgress · пауза</span></div>
+    <div class="spec"><div class="sp load"><span class="spin"></span><div class="t"><b>Загружаем сценарий…</b><span>Обычно это занимает пару секунд</span></div></div><span class="cap">Loader</span></div>
+    <div class="spec"><div class="coach"><span class="st">ШАГ 2 ИЗ 4 · ОНБОРДИНГ</span><h3>Выберите специализацию</h3><p>Это поможет подобрать сценарии под ваш профиль: тревожность, выгорание, отношения…</p><div class="foot"><button class="btn primary">Далее</button><span class="skip">Пропустить</span></div></div><span class="cap">OnboardingStep (коуч-марк)</span></div>
+  </div>
+</section>
+
+<!-- ===== Consent / Code / DeepLink ===== -->
+<section>
+  <h2>ConsentBlock · CodeDisplay · DeepLinkBlock <span class="tok">E-41 · E-31: выдача доступа клиенту</span></h2>
+  <div class="row">
+    <div class="spec"><div class="consent"><div class="cb"><span class="box"><svg class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 6 9 17l-5-5" /> </svg></span><span>Я даю согласие на обработку персональных данных</span></div><div class="links">Подробности:<a>Политика конфиденциальности</a><a>Условия использования платформы</a></div></div><span class="cap">ConsentBlock</span></div>
+    <div class="spec"><div class="code"><span class="lab">КОД ДОСТУПА</span><div class="val">A7X9-Q2</div><div class="nt">Клиент введёт код на странице игры</div><button class="btn secondary"><svg class="lucide lucide-copy" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <rect width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /> </svg> Скопировать</button></div><span class="cap">CodeDisplay · mono 32</span></div>
+    <div class="spec"><div class="deep"><span class="lab" style="font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:.06em">ССЫЛКА ДЛЯ КЛИЕНТА</span><div class="url"><span class="u">app.platform.ru/g/A7X9Q2</span><span class="cp"><svg class="lucide lucide-copy" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <rect width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /> </svg></span></div><span class="qr"><svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="#FFFFFF"/><rect x="0.0" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="3.0" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="15.2" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="3.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="3.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="15.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="15.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="3.0" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="15.2" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="45.7" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="57.9" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="3.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="3.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="12.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="15.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="15.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="45.7" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="57.9" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="3.0" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="15.2" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="45.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="45.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="57.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="57.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="3.0" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="12.2" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="15.2" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="27.4" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="36.6" y="0.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="24.4" y="3.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="36.6" y="3.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="30.5" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="33.5" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="36.6" y="6.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="24.4" y="9.1" width="3.0" height="3.0" fill="#0F172A"/><rect x="30.5" y="15.2" width="3.0" height="3.0" fill="#0F172A"/><rect x="33.5" y="18.3" width="3.0" height="3.0" fill="#0F172A"/><rect x="3.0" y="24.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="9.1" y="24.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="30.5" y="24.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="36.6" y="24.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="24.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="24.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="24.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="27.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="33.5" y="27.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="36.6" y="27.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="39.6" y="27.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="27.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="45.7" y="27.4" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="30.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="15.2" y="30.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="24.4" y="30.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="33.5" y="30.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="42.7" y="30.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="30.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="30.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="33.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="18.3" y="33.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="27.4" y="33.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="30.5" y="33.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="39.6" y="33.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="33.5" width="3.0" height="3.0" fill="#0F172A"/><rect x="0.0" y="36.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="3.0" y="36.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="6.1" y="36.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="24.4" y="36.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="27.4" y="36.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="45.7" y="36.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="36.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="36.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="27.4" y="39.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="33.5" y="39.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="39.6" y="39.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="39.6" width="3.0" height="3.0" fill="#0F172A"/><rect x="24.4" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="27.4" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="30.5" y="42.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="27.4" y="45.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="36.6" y="45.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="45.7" y="45.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="45.7" width="3.0" height="3.0" fill="#0F172A"/><rect x="24.4" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="36.6" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="57.9" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="48.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="30.5" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="33.5" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="36.6" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="57.9" y="51.8" width="3.0" height="3.0" fill="#0F172A"/><rect x="24.4" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="45.7" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="57.9" y="54.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="57.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="51.8" y="57.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="54.9" y="57.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="57.9" y="57.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="61.0" y="57.9" width="3.0" height="3.0" fill="#0F172A"/><rect x="30.5" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="39.6" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="48.8" y="61.0" width="3.0" height="3.0" fill="#0F172A"/><rect x="57.9" y="61.0" width="3.0" height="3.0" fill="#0F172A"/></svg></span><div class="nt">Или отсканируйте QR-код в мобильном</div><button class="btn secondary" style="margin-top:10px"><svg class="lucide lucide-link-2" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M9 17H7A5 5 0 0 1 7 7h2" /> <path d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line x1="8" x2="16" y1="12" y2="12" /> </svg> Скопировать ссылку</button></div><span class="cap">DeepLinkBlock + QR-плейсхолдер</span></div>
+  </div>
+</section>
+
+<!-- ===== Empty / Badges / Comment / Audit ===== -->
+<section>
+  <h2>EmptyState · VerificationBadge · SupervisionComment · AuditLogRow <span class="tok">состояния и служебные компоненты</span></h2>
+  <div class="row">
+    <div class="spec"><div class="empty"><svg class="lucide lucide-inbox" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /> <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /> </svg><h3 style="margin-top:12px">Здесь пока пусто</h3><p>Выдайте первую игру клиенту — она появится в списке доступов</p><button class="btn primary">Выдать игру</button></div><span class="cap">EmptyState</span></div>
+    <div class="spec">
+      <div class="vstack">
+        <span class="vb" style="background:var(--bg2);color:var(--ink2)"><svg class="lucide lucide-user" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </svg> Без статуса</span>
+        <span class="vb" style="background:#FEF3C7;color:#92400E"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 6v6l4 2" /> <circle cx="12" cy="12" r="10" /> </svg> На проверке</span>
+        <span class="vb" style="background:#DCFCE7;color:#166534"><svg class="lucide lucide-badge-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" /> <path d="m9 12 2 2 4-4" /> </svg> Верифицирован</span>
+        <span class="vb" style="background:#FEE2E2;color:#991B1B"><svg class="lucide lucide-circle-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#991B1B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" /> </svg> Отклонён</span>
+      </div>
+      <span class="cap">VerificationBadge ×4</span>
+    </div>
+    <div class="spec"><div class="svc"><div class="hd"><span class="ava">МП</span><div><b>М. Петрова</b><span>супервизор · 14.09.2026</span></div></div><div class="quote"><span>Хороший ход на 4-й реплике. Обратите внимание на момент 06:40 — клиент дважды возвращается к теме отца: уместен циркулярный вопрос.</span><span>Оценка за сессию: <b>82/100</b>. Рекомендую сценарий «Циркулярные вопросы».</span></div></div><span class="cap">SupervisionComment</span></div>
+  </div>
+  <div class="row">
+    <div class="spec" style="width:100%;max-width:620px"><div class="audit"><svg class="lucide lucide-fingerprint" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" /> <path d="M14 13.12c0 2.38 0 6.38-1 8.88" /> <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" /> <path d="M2 12a10 10 0 0 1 18-6" /> <path d="M2 16h.01" /> <path d="M21.8 16c.2-2 .131-5.354 0-6" /> <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" /> <path d="M8.65 22c.21-.66.45-1.32.57-2" /> <path d="M9 6.8a6 6 0 0 1 9 5.2v2" /> </svg><span class="who">admin@platform.ru</span><span class="act">опубликовал</span><span class="ent">Сценарий #142 «Первичная консультация»</span><span class="tm">16.09.2026 14:32</span></div><span class="cap">AuditLogRow</span></div>
+  </div>
+</section>
+
+<!-- ===== TMA ===== -->
+<section>
+  <h2>TMA: BottomNav · MainButton <span class="tok">Telegram Mini App · только 390 · safe area</span></h2>
+  <p class="desc">Навигация 64px с активной вкладкой-accent; MainButton — нативная кнопка Telegram (80px, зона safe area снизу). В макетах TMA контент не заходит в эти зоны.</p>
+  <div class="row">
+    <div class="spec"><div class="tma"><div class="nav">
+      <span class="it act"><svg class="lucide lucide-home" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /> </svg> Главная</span>
+      <span class="it"><svg class="lucide lucide-book-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 7v14" /> <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /> </svg> Сценарии</span>
+      <span class="it"><svg class="lucide lucide-sparkles" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" /> <path d="M20 2v4" /> <path d="M22 4h-4" /> <circle cx="4" cy="20" r="2" /> </svg> Игры</span>
+      <span class="it"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M3 3v16a2 2 0 0 0 2 2h16" /> <path d="M18 17V9" /> <path d="M13 17V5" /> <path d="M8 17v-3" /> </svg> Прогресс</span>
+      <span class="it"><svg class="lucide lucide-user" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </svg> Профиль</span>
+    </div></div><span class="cap">BottomNav · 390×64</span></div>
+    <div class="spec"><div class="tma"><div class="mainbtn"><div class="b">Продолжить</div><span class="sa">safe area · высота 80px</span></div></div><span class="cap">MainButton / enabled</span></div>
+    <div class="spec"><div class="tma"><div class="mainbtn dis"><div class="b">Подождите…</div><span class="sa">safe area · высота 80px</span></div></div><span class="cap">MainButton / disabled</span></div>
+  </div>
+</section>
+
+<footer>
+  Platform Design · Domain components v1.0 · 33 новых компонента (итого 106) генерируются плагином v0.3 · источник: tokens/design-tokens.json
+</footer>
+</div>
+</body>
+</html>

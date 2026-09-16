@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Design · 02_Components · UI-kit · v1.0</title>
+<style>
+  :root{
+    --bg:#FFFFFF; --bg2:#F7F8FA; --bg3:#EEF0F4; --ink:#0F172A; --ink2:#475569; --ink3:#94A3B8;
+    --bd:#E2E8F0; --acc:#2563EB; --acc-h:#1D4ED8; --acc-a:#1E40AF; --acc2:#7C3AED;
+    --ok:#16A34A; --warn:#F59E0B; --err:#DC2626; --err-h:#B91C1C; --info:#0EA5E9;
+    --r-xs:4px; --r-sm:8px; --r-md:12px; --r-lg:16px;
+    --sh-sm:0 1px 2px rgba(0,0,0,.05); --sh-md:0 4px 12px rgba(0,0,0,.08); --sh-lg:0 12px 32px rgba(0,0,0,.12);
+    --f: 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--f);color:var(--ink);background:var(--bg2);line-height:1.5;font-size:16px}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px 96px}
+  header.hero{background:#fff;border-bottom:1px solid var(--bd);padding:48px 0 32px;margin-bottom:40px}
+  .chip-top{display:inline-flex;align-items:center;gap:6px;background:#EEF2FF;color:var(--acc);border:1px solid #C7D7FE;border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:600}
+  .chip-top.gray{background:var(--bg3);color:var(--ink2);border-color:var(--bd)}
+  h1{font-size:40px;line-height:48px;font-weight:700;margin:16px 0 8px}
+  .sub{font-size:18px;color:var(--ink2);max-width:760px}
+  section{background:#fff;border:1px solid var(--bd);border-radius:var(--r-lg);padding:40px;margin-top:32px;box-shadow:var(--sh-sm)}
+  h2{font-size:24px;font-weight:600;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h2 .tok{font-size:12px;font-weight:500;color:var(--ink3);font-family:ui-monospace,monospace}
+  .desc{color:var(--ink2);font-size:14px;margin-top:6px;max-width:780px}
+  .row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;margin-top:24px}
+  .spec{display:flex;flex-direction:column;gap:8px;min-width:120px}
+  .spec .cap{font-size:11px;color:var(--ink3);font-family:ui-monospace,monospace}
+  .divider{height:1px;background:var(--bd);margin:32px 0}
+  .note{display:flex;gap:12px;border-radius:var(--r-md);padding:14px 16px;font-size:14px;margin-top:20px;border:1px solid #FDE68A;background:#FFFBEB;color:#92400E}
+  .note svg{flex:none;margin-top:2px}
+  /* ---- Кнопки ---- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:9999px;font-family:var(--f);font-weight:600;cursor:pointer;transition:background var(--dur,150ms) var(--ease,ease-out),border-color 150ms ease-out,color 150ms ease-out,transform 150ms ease-out}
+  .btn.sm{height:32px;padding:0 14px;font-size:13px}
+  .btn.md{height:40px;padding:0 16px;font-size:14px}
+  .btn.lg{height:48px;padding:0 20px;font-size:16px}
+  .btn.primary{background:var(--acc);color:#fff}
+  .btn.primary:hover{background:var(--acc-h)}
+  .btn.primary:active{background:var(--acc-a)}
+  .btn.secondary{background:var(--bg2);border-color:var(--bd);color:var(--ink)}
+  .btn.secondary:hover{background:var(--bg3)}
+  .btn.secondary:active{background:var(--bd)}
+  .btn.ghost{background:transparent;color:var(--acc)}
+  .btn.ghost:hover{background:var(--bg3)}
+  .btn.ghost:active{background:var(--bd)}
+  .btn.danger{background:var(--err);color:#fff}
+  .btn.danger:hover{background:var(--err-h)}
+  .btn.danger:active{background:#991B1B}
+  .btn.link{background:transparent;color:var(--acc);text-decoration:none}
+  .btn.link:hover{text-decoration:underline}
+  .btn.focus-ring{outline:2px solid var(--acc);outline-offset:3px}
+  .btn.disabled,.btn:disabled{background:var(--bg3);color:var(--ink3);border-color:transparent;cursor:not-allowed;transform:none}
+  .btn.loading{opacity:.55;pointer-events:none}
+  .spin{width:14px;height:14px;border:2px solid currentColor;border-bottom-color:transparent;border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn.icon-only{width:40px;padding:0}
+  /* ---- Инпуты ---- */
+  .field{display:flex;flex-direction:column;gap:6px;width:280px}
+  .field .lbl{font-size:12px;font-weight:500;color:var(--ink2)}
+  .field .inp{height:40px;border:1px solid var(--bd);border-radius:var(--r-sm);padding:0 12px;font-size:14px;font-family:var(--f);color:var(--ink);background:#fff;transition:border-color 150ms ease-out,box-shadow 150ms ease-out;width:100%}
+  .field .inp::placeholder{color:var(--ink3)}
+  .field .inp:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--acc)}
+  .field .inp.err{border-color:var(--err)}
+  .field .inp:disabled{background:var(--bg3);cursor:not-allowed}
+  .field .help{font-size:12px;color:var(--ink3)}
+  .field .help.err{color:var(--err)}
+  .field textarea.inp{height:96px;padding:10px 12px;resize:vertical}
+  .field .searchwrap{position:relative}
+  .field .searchwrap svg{position:absolute;left:12px;top:12px;pointer-events:none}
+  .field .searchwrap .inp{padding-left:36px}
+  .field .errwrap{position:relative}
+  .field .errwrap svg{position:absolute;right:12px;top:12px}
+  /* ---- Select ---- */
+  .sel{position:relative;width:280px}
+  .sel .inp{display:flex;align-items:center;justify-content:space-between;height:40px;border:1px solid var(--bd);border-radius:var(--r-sm);padding:0 12px;font-size:14px;background:#fff;cursor:pointer}
+  .sel .menu{margin-top:6px;background:#fff;border:1px solid var(--bd);border-radius:var(--r-sm);box-shadow:var(--sh-md);overflow:hidden}
+  .sel .opt{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:14px}
+  .sel .opt.hl{background:var(--bg2)}
+  .sel .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;height:48px;border:1px solid var(--bd);border-radius:var(--r-sm);padding:0 40px 0 10px;background:#fff;min-height:48px;height:auto;padding-top:10px;padding-bottom:10px}
+  .mini-chip{background:var(--bg3);color:var(--ink2);font-size:12px;font-weight:500;border-radius:9999px;padding:3px 10px}
+  .sel .chev{position:absolute;right:12px;top:12px;pointer-events:none;color:var(--ink2)}
+  .sel .chev.bot{top:auto;bottom:14px}
+  /* ---- Чекбоксы и переключатели ---- */
+  .cb{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px}
+  .cb input{position:absolute;opacity:0}
+  .cb .box{width:20px;height:20px;border:1px solid var(--bd);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;transition:all 150ms ease-out;flex:none}
+  .cb input:checked + .box{background:var(--acc);border-color:var(--acc)}
+  .cb input:focus-visible + .box{outline:2px solid var(--acc);outline-offset:3px}
+  .cb.dis{color:var(--ink3);cursor:not-allowed}
+  .cb.dis .box{background:var(--bg3)}
+  .rd .box{border-radius:50%;border-width:2px}
+  .rd input:checked + .box{background:#fff;border-color:var(--acc)}
+  .rd input:checked + .box::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--acc)}
+  .sw{position:relative;width:44px;height:24px;flex:none}
+  .sw input{position:absolute;opacity:0}
+  .sw .track{position:absolute;inset:0;background:var(--bd);border-radius:9999px;transition:background 250ms ease-in-out}
+  .sw .knob{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;box-shadow:var(--sh-sm);transition:left 250ms ease-in-out}
+  .sw input:checked ~ .track{background:var(--acc)}
+  .sw input:checked ~ .knob{left:23px}
+  .sw input:focus-visible ~ .track{outline:2px solid var(--acc);outline-offset:3px}
+  /* ---- Чипы ---- */
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:9999px;font-weight:500;border:1px solid transparent}
+  .chip.md{height:28px;padding:0 10px;font-size:12px}
+  .chip.sm{height:24px;padding:0 8px;font-size:11px}
+  .chip.neutral{background:var(--bg2);border-color:var(--bd);color:var(--ink2)}
+  .chip.info{background:#E0F2FE;color:#0C4A6E}
+  .chip.success{background:#DCFCE7;color:#166534}
+  .chip.warning{background:#FEF3C7;color:#92400E}
+  .chip.error{background:#FEE2E2;color:#991B1B}
+  .chip.skill{background:#fff;border-color:var(--bd);color:var(--ink)}
+  .chip .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  /* ---- Аватары ---- */
+  .ava{border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--acc2);color:#fff;font-weight:600;flex:none}
+  .ava.fb{background:var(--bg3);color:var(--ink3)}
+  /* ---- Tooltip ---- */
+  .tip{position:relative;display:inline-block;background:var(--ink);color:#fff;border-radius:var(--r-sm);padding:6px 12px;font-size:12px;box-shadow:var(--sh-md)}
+  .tip::after{content:'';position:absolute;left:50%;bottom:-4px;width:10px;height:10px;background:var(--ink);transform:translateX(-50%) rotate(45deg);border-radius:2px}
+  /* ---- Модалка ---- */
+  .modal{width:560px;border-radius:var(--r-lg);background:#fff;box-shadow:var(--sh-lg);padding:24px;position:relative}
+  .modal h3{font-size:20px;font-weight:600}
+  .modal p{font-size:14px;color:var(--ink2);margin-top:12px}
+  .modal .foot{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}
+  .modal .x{position:absolute;top:20px;right:20px;color:var(--ink3);cursor:pointer;background:none;border:none}
+  /* ---- Тосты ---- */
+  .toast{display:flex;align-items:flex-start;gap:12px;width:380px;background:#fff;border:1px solid var(--bd);border-radius:var(--r-md);box-shadow:var(--sh-md);padding:10px 14px 10px 0;position:relative;overflow:hidden}
+  .toast::before{content:'';width:4px;align-self:stretch;border-radius:0 2px 2px 0}
+  .toast.info::before{background:var(--info)}.toast.success::before{background:var(--ok)}
+  .toast.warning::before{background:var(--warn)}.toast.error::before{background:var(--err)}
+  .toast b{display:block;font-size:13px;font-weight:600}
+  .toast span{font-size:12px;color:var(--ink2)}
+  .toast .x{margin-left:auto;color:var(--ink3);background:none;border:none;cursor:pointer;padding:2px}
+  /* ---- Прогресс ---- */
+  .prog{display:flex;align-items:center;gap:12px}
+  .prog .track{width:260px;height:8px;background:var(--bg3);border-radius:9999px;overflow:hidden}
+  .prog .fill{height:100%;background:var(--acc);border-radius:9999px;transition:width 400ms ease-in-out}
+  .prog .pct{font-size:12px;font-weight:500;color:var(--ink2)}
+  .steps{display:flex;align-items:flex-start}
+  .step{display:flex;flex-direction:column;align-items:center;width:110px;position:relative}
+  .step .bub{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--bg3);color:var(--ink3);z-index:1}
+  .step.done .bub,.step.act .bub{background:var(--acc);color:#fff}
+  .step .line{position:absolute;top:12px;left:-55px;width:110px;height:2px;background:var(--bg3)}
+  .step.done .line,.step.act .line{background:var(--acc)}
+  .step .lbl{font-size:11px;color:var(--ink2);margin-top:8px;text-align:center}
+  /* ---- Табы ---- */
+  .tabs-u{display:flex;gap:24px;border-bottom:1px solid var(--bd);width:360px}
+  .tabs-u .tab{padding:8px 0;font-size:14px;color:var(--ink2);cursor:pointer;border-bottom:2px solid transparent}
+  .tabs-u .tab.act{color:var(--ink);font-weight:600;border-bottom-color:var(--acc)}
+  .tabs-p{display:flex;background:var(--bg3);border-radius:9999px;padding:4px;width:320px}
+  .tabs-p .tab{flex:1;text-align:center;padding:4px 0;font-size:13px;color:var(--ink2);border-radius:9999px;cursor:pointer}
+  .tabs-p .tab.act{background:#fff;color:var(--ink);font-weight:600;box-shadow:var(--sh-sm)}
+  /* ---- Аккордеон ---- */
+  .acc{width:480px}
+  .acc .item{border-bottom:1px solid var(--bd)}
+  .acc .head{display:flex;align-items:center;justify-content:space-between;padding:12px 0;font-size:14px;font-weight:600;cursor:pointer}
+  .acc .body{padding:0 0 16px;font-size:14px;color:var(--ink2)}
+  /* ---- Таблица ---- */
+  table.data{width:680px;border-collapse:collapse;font-size:13px}
+  table.data th{text-align:left;background:var(--bg2);color:var(--ink3);font-size:11px;font-weight:500;letter-spacing:.05em;padding:12px 16px}
+  table.data th:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm)}
+  table.data th:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
+  table.data td{padding:12px 16px;border-bottom:1px solid var(--bd);color:var(--ink2)}
+  table.data td.name{color:var(--ink);font-weight:500}
+  table.data td.score{color:var(--ink);font-weight:600}
+  .pager{display:flex;align-items:center;gap:8px;margin-top:16px;color:var(--ink2);font-size:12px}
+  .pager .pg{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer}
+  .pager .pg.act{background:var(--acc);color:#fff;font-weight:600}
+  /* ---- Skeleton ---- */
+  .skl-card{width:300px;border:1px solid var(--bd);border-radius:var(--r-md);padding:16px;background:#fff}
+  .skl{background:var(--bg3);border-radius:6px;animation:pulse 1.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+  /* ---- Тёмная тема ---- */
+  .dark{background:var(--d-bg,#0B1220);border-radius:var(--r-lg);padding:32px;margin-top:24px}
+  .dark h3{color:#F8FAFC;font-size:16px}
+  .dark .sub2{color:#CBD5E1;font-size:12px;margin-top:4px}
+  .dark .btn.secondary{background:#111827;border-color:#1F2937;color:#F8FAFC}
+  .dark .btn.secondary:hover{background:#1F2937}
+  .dark .btn.ghost{color:#60A5FA}
+  .dark .inp-d{background:#111827;border:1px solid #1F2937;border-radius:var(--r-sm);height:40px;padding:0 12px;color:#F8FAFC;font-size:14px;width:280px}
+  .dark .inp-d::placeholder{color:#64748B}
+  .dark .chip.skill{background:#111827;border-color:#1F2937;color:#CBD5E1}
+  .dark .toast{background:#111827;border-color:#1F2937;box-shadow:none}
+  .dark .toast span{color:#CBD5E1}
+  footer{margin-top:48px;text-align:center;color:var(--ink3);font-size:13px}
+  .kbd{background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:1px 6px;font-size:12px;font-family:ui-monospace,monospace}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap" style="padding-bottom:0">
+    <span class="chip-top">● Platform Design</span>
+    <span class="chip-top gray">Итерация 2: UI-kit — готово</span>
+    <h1>02_Components · UI-kit</h1>
+    <p class="sub">Базовые компоненты ТЗ 4.1 со всеми состояниями (ТЗ 6.1). Каждая группа — компоненты в Penpot (нейминг <b>Name / Variant / State</b>), генерируются плагином Platform Builder v0.2. Все значения — токены из <span class="kbd">tokens/design-tokens.json</span>.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ BUTTON ============ -->
+<section>
+  <h2>Button <span class="tok">5 вариантов × 6 состояний × 3 размера</span></h2>
+  <p class="desc">Кликабельные зоны: sm 32 / md 40 / lg 48 по высоте (ТЗ 4.1); фокус — кольцо 2px с отступом 3px (WCAG). Loading блокирует нажатия и показывает спиннер.</p>
+  <div class="row">
+    <div style="min-width:100%"><div style="font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--acc);margin-bottom:10px">primary</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<div class="spec"><button class="btn primary md"  >Продолжить</button><span class="cap">default</span></div>
+<div class="spec"><button class="btn primary md"  style="background:var(--acc-h)">Продолжить</button><span class="cap">hover</span></div>
+<div class="spec"><button class="btn primary md"  style="background:var(--acc-a)">Продолжить</button><span class="cap">active</span></div>
+<div class="spec"><button class="btn primary md focus-ring"  >Продолжить</button><span class="cap">focus</span></div>
+<div class="spec"><button class="btn primary md disabled"  disabled >Продолжить</button><span class="cap">disabled</span></div>
+<div class="spec"><button class="btn primary md loading"  ><span class="spin"></span>Продолжить</button><span class="cap">loading</span></div>
+</div></div>
+<div style="min-width:100%"><div style="font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--acc);margin-bottom:10px">secondary</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<div class="spec"><button class="btn secondary md"  >Вторичная</button><span class="cap">default</span></div>
+<div class="spec"><button class="btn secondary md"  style="background:var(--bg3)">Вторичная</button><span class="cap">hover</span></div>
+<div class="spec"><button class="btn secondary md"  style="background:var(--bd)">Вторичная</button><span class="cap">active</span></div>
+<div class="spec"><button class="btn secondary md focus-ring"  >Вторичная</button><span class="cap">focus</span></div>
+<div class="spec"><button class="btn secondary md disabled"  disabled >Вторичная</button><span class="cap">disabled</span></div>
+<div class="spec"><button class="btn secondary md loading"  ><span class="spin"></span>Вторичная</button><span class="cap">loading</span></div>
+</div></div>
+<div style="min-width:100%"><div style="font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--acc);margin-bottom:10px">ghost</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<div class="spec"><button class="btn ghost md"  >Отмена</button><span class="cap">default</span></div>
+<div class="spec"><button class="btn ghost md"  style="background:var(--bg3)">Отмена</button><span class="cap">hover</span></div>
+<div class="spec"><button class="btn ghost md"  style="background:var(--bd)">Отмена</button><span class="cap">active</span></div>
+<div class="spec"><button class="btn ghost md focus-ring"  >Отмена</button><span class="cap">focus</span></div>
+<div class="spec"><button class="btn ghost md disabled"  disabled >Отмена</button><span class="cap">disabled</span></div>
+<div class="spec"><button class="btn ghost md loading"  ><span class="spin"></span>Отмена</button><span class="cap">loading</span></div>
+</div></div>
+<div style="min-width:100%"><div style="font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--acc);margin-bottom:10px">danger</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<div class="spec"><button class="btn danger md"  >Удалить</button><span class="cap">default</span></div>
+<div class="spec"><button class="btn danger md"  style="background:var(--err-h)">Удалить</button><span class="cap">hover</span></div>
+<div class="spec"><button class="btn danger md"  style="background:#991B1B">Удалить</button><span class="cap">active</span></div>
+<div class="spec"><button class="btn danger md focus-ring"  >Удалить</button><span class="cap">focus</span></div>
+<div class="spec"><button class="btn danger md disabled"  disabled >Удалить</button><span class="cap">disabled</span></div>
+<div class="spec"><button class="btn danger md loading"  ><span class="spin"></span>Удалить</button><span class="cap">loading</span></div>
+</div></div>
+<div style="min-width:100%"><div style="font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--acc);margin-bottom:10px">link</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<div class="spec"><button class="btn link md"  >Ссылка</button><span class="cap">default</span></div>
+<div class="spec"><button class="btn link md"  style="background:transparent">Ссылка</button><span class="cap">hover</span></div>
+<div class="spec"><button class="btn link md"  style="background:transparent">Ссылка</button><span class="cap">active</span></div>
+<div class="spec"><button class="btn link md focus-ring"  >Ссылка</button><span class="cap">focus</span></div>
+<div class="spec"><button class="btn link md disabled"  disabled >Ссылка</button><span class="cap">disabled</span></div>
+<div class="spec"><button class="btn link md loading"  ><span class="spin"></span>Ссылка</button><span class="cap">loading</span></div>
+</div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="row">
+    <div class="spec"><button class="btn primary sm">Продолжить</button><span class="cap">primary / sm 32</span></div>
+    <div class="spec"><button class="btn primary lg">Продолжить</button><span class="cap">primary / lg 48</span></div>
+    <div class="spec"><button class="btn primary md icon-only" aria-label="Добавить"><svg  class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M5 12h14" /> <path d="M12 5v14" /> </svg></button><span class="cap">icon-only / md</span></div>
+    <div class="spec"><button class="btn primary md icon-only focus-ring" aria-label="Добавить"><svg  class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M5 12h14" /> <path d="M12 5v14" /> </svg></button><span class="cap">icon-only / focus</span></div>
+  </div>
+</section>
+
+<!-- ============ INPUT ============ -->
+<section>
+  <h2>Input <span class="tok">text · email · search · textarea · 6 состояний</span></h2>
+  <p class="desc">Слоты: label, helper/error, префикс/суффикс-иконки. Focus — рамка + кольцо; ошибка сопровождается иконкой и текстом (не только цветом — WCAG 8.1).</p>
+  <div class="row">
+    <div class="field"><span class="lbl">Имя</span><input class="inp" placeholder="Иван Иванов"><span class="help">Подсказка под полем</span><span class="cap">default</span></div>
+    <div class="field"><span class="lbl">Имя</span><input class="inp focus" placeholder="Иван Иванов" style="border-color:var(--acc);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--acc)"><span class="help">Подсказка под полем</span><span class="cap">focus</span></div>
+    <div class="field"><span class="lbl">Имя</span><input class="inp" value="Иван Иванов"><span class="help">Подсказка под полем</span><span class="cap">filled</span></div>
+    <div class="field"><span class="lbl">Email</span>
+<div class="errwrap"><input class="inp err" value="ivan@" style="padding-right:36px"><svg  class="lucide lucide-circle-x" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" /> </svg></div>
+<span class="help err">Введите корректный email</span><span class="cap">error + иконка (не только цвет)</span></div>
+    <div class="field"><span class="lbl">Имя</span><input class="inp" placeholder="Иван Иванов" disabled><span class="help">Подсказка под полем</span><span class="cap">disabled</span></div>
+    <div class="field"><span class="lbl">Поиск</span>
+<div class="searchwrap"><svg  class="lucide lucide-search" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m21 21-4.34-4.34" /> <circle cx="11" cy="11" r="8" /> </svg><input class="inp" placeholder="Сценарий или навык…" style="padding-left:36px"></div>
+<span class="help">Подсказка под полем</span><span class="cap">search · префикс-иконка</span></div>
+  </div>
+  <div class="divider"></div>
+  <div class="row">
+    <div class="field" style="width:280px"><span class="lbl">Сообщение</span><textarea class="inp" placeholder="Опишите ситуацию…"></textarea><span class="cap">textarea · grow по контенту</span></div>
+  </div>
+</section>
+
+<!-- ============ SELECT ============ -->
+<section>
+  <h2>Select / Combobox <span class="tok">одинарный · открытый · множественный</span></h2>
+  <div class="row">
+    <div class="spec"><div class="sel"><div class="inp"><span>Еженедельно</span><svg  class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m6 9 6 6 6-6" /> </svg></div></div><span class="cap">default</span></div>
+    <div class="spec"><div class="sel"><div class="inp"><span>Еженедельно</span><svg  class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m6 9 6 6 6-6" /> </svg></div>
+<div class="menu">
+<div class="opt">Ежедневно</div>
+<div class="opt hl"><span>Еженедельно</span><svg  class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 6 9 17l-5-5" /> </svg></div>
+<div class="opt">Ежемесячно</div>
+</div></div><span class="cap">open · выбранное выделено</span></div>
+    <div class="spec"><div class="sel"><div class="chips"><span class="mini-chip">Тревожность</span><span class="mini-chip">Выгорание</span></div><span class="chev bot"><svg  class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m6 9 6 6 6-6" /> </svg></span></div><span class="cap">multi · чипы значений</span></div>
+  </div>
+</section>
+
+<!-- ============ BOOLEAN ============ -->
+<section>
+  <h2>Checkbox · Radio · Switch <span class="tok">все состояния ТЗ 6.1</span></h2>
+  <div class="row">
+    <style>
+.cb .box svg{display:none}
+.cb input:checked + .box svg{display:block}
+.sw.dis .track{background:var(--bg3)}
+.sw.dis input:checked ~ .track{background:var(--bg3)}
+.sw.dis .knob{background:var(--bg2)}
+.step .line{display:none}
+.step + .step .line{display:block}
+.step:first-child .line{display:none !important}
+</style>
+<div class="spec"><label class="cb"><input type="checkbox"><span class="box"><svg  class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 6 9 17l-5-5" /> </svg></span>Согласен с условиями</label><span class="cap">unchecked · кликабельно</span></div>
+<div class="spec"><label class="cb"><input type="checkbox" checked><span class="box"><svg  class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 6 9 17l-5-5" /> </svg></span>Согласен с условиями</label><span class="cap">checked · кликабельно</span></div>
+<div class="spec"><div class="cb"><input type="checkbox" checked><span class="box" style="background:var(--acc);border-color:var(--acc)"><svg  class="lucide lucide-minus" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M5 12h14" /> </svg></span>Согласен с условиями</div><span class="cap">indeterminate (−)</span></div>
+<div class="spec"><div class="cb dis"><input type="checkbox" disabled><span class="box"><svg  class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 6 9 17l-5-5" /> </svg></span>Согласен с условиями</div><span class="cap">disabled</span></div>
+<div class="spec"><div class="cb"><input type="checkbox"><span class="box" style="outline:2px solid var(--acc);outline-offset:3px"><svg  class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 6 9 17l-5-5" /> </svg></span>Согласен с условиями</div><span class="cap">focus · кольцо 2px</span></div>
+  </div>
+  <div class="divider"></div>
+  <div class="row">
+    <div class="spec"><label class="cb rd"><input type="radio" name="rd-demo"><span class="box"></span>Вариант</label><span class="cap">unchecked · кликабельно</span></div>
+<div class="spec"><label class="cb rd"><input type="radio" name="rd-demo" checked><span class="box"></span>Вариант</label><span class="cap">checked · кликабельно</span></div>
+<div class="spec"><div class="cb rd dis"><input type="radio" disabled><span class="box"></span>Вариант</div><span class="cap">disabled</span></div>
+  </div>
+  <div class="divider"></div>
+  <div class="row">
+    <div class="spec"><label class="sw"><input type="checkbox">
+<span class="track"></span><span class="knob"></span></label>
+<span style="font-size:14px;color:var(--ink);margin-top:2px">Уведомления</span><span class="cap">off</span></div>
+<div class="spec"><label class="sw"><input type="checkbox" checked>
+<span class="track"></span><span class="knob"></span></label>
+<span style="font-size:14px;color:var(--ink);margin-top:2px">Уведомления</span><span class="cap">on · кликабельно</span></div>
+<div class="spec"><label class="sw dis"><input type="checkbox" disabled>
+<span class="track"></span><span class="knob"></span></label>
+<span style="font-size:14px;color:var(--ink3);margin-top:2px">Уведомления</span><span class="cap">off + disabled</span></div>
+<div class="spec"><label class="sw dis"><input type="checkbox" checked disabled>
+<span class="track"></span><span class="knob"></span></label>
+<span style="font-size:14px;color:var(--ink3);margin-top:2px">Уведомления</span><span class="cap">on + disabled</span></div>
+  </div>
+</section>
+
+<!-- ============ CHIPS ============ -->
+<section>
+  <h2>Chip / Tag / Badge <span class="tok">нейтральные · семантические · навыки</span></h2>
+  <p class="desc">Семантические чипы — тинты 100 от semantic-цветов с тёмным текстом 900 (контраст AA, вывод WCAG-аудита итерации 1). Навыки — точка цвета навыка + нейтральный текст (смысл не только цветом).</p>
+  <div class="row">
+    <div class="spec"><span class="chip neutral md">Черновик</span><span class="cap">neutral</span></div><div class="spec"><span class="chip info md">Инфо</span><span class="cap">info</span></div><div class="spec"><span class="chip success md">Пройдено</span><span class="cap">success</span></div><div class="spec"><span class="chip warning md">На проверке</span><span class="cap">warning</span></div><div class="spec"><span class="chip error md">Ошибка</span><span class="cap">error</span></div>
+  </div>
+  <div class="divider"></div>
+  <div class="row">
+    <span class="chip skill sm"><span class="dot" style="background:#2563EB"></span>активное слушание</span><span class="chip skill sm"><span class="dot" style="background:#7C3AED"></span>эмпатия</span><span class="chip skill sm"><span class="dot" style="background:#0891B2"></span>границы</span><span class="chip skill sm"><span class="dot" style="background:#DB2777"></span>эмоции</span><span class="chip skill sm"><span class="dot" style="background:#65A30D"></span>структура</span><span class="chip skill sm"><span class="dot" style="background:#EA580C"></span>сопротивление</span><span class="chip skill sm"><span class="dot" style="background:#0EA5E9"></span>вопрошание</span><span class="chip skill sm"><span class="dot" style="background:#9333EA"></span>рефлексия</span>
+  </div>
+</section>
+
+<!-- ============ AVATAR ============ -->
+<section>
+  <h2>Avatar <span class="tok">24 / 32 / 40 / 48 / 64 · image · initials · fallback</span></h2>
+  <div class="row">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;width:100%"><div class="spec"><span class="ava" style="width:24px;height:24px;font-size:9px">АК</span><span class="cap">initials · 24</span></div><div class="spec"><span class="ava" style="width:32px;height:32px;font-size:12px">АК</span><span class="cap">initials · 32</span></div><div class="spec"><span class="ava" style="width:40px;height:40px;font-size:14px">АК</span><span class="cap">initials · 40</span></div><div class="spec"><span class="ava" style="width:48px;height:48px;font-size:17px">АК</span><span class="cap">initials · 48</span></div><div class="spec"><span class="ava" style="width:64px;height:64px;font-size:23px">АК</span><span class="cap">initials · 64</span></div></div><div style="display:flex;gap:24px;flex-wrap:wrap;width:100%;margin-top:8px"><div class="spec"><span class="ava fb" style="width:24px;height:24px"><svg  class="lucide lucide-user" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </svg></span><span class="cap">fallback · 24</span></div><div class="spec"><span class="ava fb" style="width:32px;height:32px"><svg  class="lucide lucide-user" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </svg></span><span class="cap">fallback · 32</span></div><div class="spec"><span class="ava fb" style="width:40px;height:40px"><svg  class="lucide lucide-user" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </svg></span><span class="cap">fallback · 40</span></div><div class="spec"><span class="ava fb" style="width:48px;height:48px"><svg  class="lucide lucide-user" xmlns="http://www.w3.org/2000/svg" width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </svg></span><span class="cap">fallback · 48</span></div><div class="spec"><span class="ava fb" style="width:64px;height:64px"><svg  class="lucide lucide-user" xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </svg></span><span class="cap">fallback · 64</span></div></div>
+  </div>
+</section>
+
+<!-- ============ TOOLTIP + PROGRESS ============ -->
+<section>
+  <h2>Tooltip · Progress <span class="tok">линейный · круговой · шаги</span></h2>
+  <div class="row" style="align-items:center">
+    <div class="spec"><span class="tip">Эмпатия — отражение чувств клиента</span><span class="cap">tooltip / top</span></div>
+    <div class="spec"><div class="prog"><div class="track"><div class="fill" style="width:40%"></div></div><span class="pct">40%</span></div><span class="cap">linear · 40%</span></div>
+    <div class="spec"><svg width="48" height="48" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="20" cy="20" r="16" stroke="#EEF0F4" stroke-width="5"/>
+<circle cx="20" cy="20" r="16" stroke="#2563EB" stroke-width="5" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="60.3" transform="rotate(-90 20 20)"/></svg><span class="cap">circular · 40% · SVG</span></div>
+    <div class="spec"><div class="steps">
+<div class="step done"><span class="line"></span><span class="bub"><svg  class="lucide lucide-check" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 6 9 17l-5-5" /> </svg></span><span class="lbl">Профиль</span></div>
+<div class="step act"><span class="line"></span><span class="bub">2</span><span class="lbl">Специализация</span></div>
+<div class="step"><span class="line"></span><span class="bub">3</span><span class="lbl">Верификация</span></div>
+<div class="step"><span class="line"></span><span class="bub">4</span><span class="lbl">Готово</span></div>
+</div><span class="cap">steps · шаг 2 из 4</span></div>
+  </div>
+</section>
+
+<!-- ============ TABS + ACCORDION ============ -->
+<section>
+  <h2>Tabs · Accordion <span class="tok">underline · pills · свёрнут/развёрнут</span></h2>
+  <div class="row">
+    <div class="spec"><div class="tabs-u"><span class="tab">Обзор</span><span class="tab act">Сессии</span><span class="tab">Настройки</span></div><span class="cap">underline</span></div>
+    <div class="spec"><div class="tabs-p"><span class="tab act">Неделя</span><span class="tab">Месяц</span><span class="tab">Год</span></div><span class="cap">pills</span></div>
+  </div>
+  <div class="divider"></div>
+  <div class="row">
+    <div class="spec"><div class="acc">
+<div class="item"><div class="head">Что входит в разбор сессии? <svg  class="lucide lucide-chevron-up" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m18 15-6-6-6 6" /> </svg></div>
+<div class="body">Полный разбор: баллы по 8 навыкам, ключевые моменты, альтернативные ходы и комментарий супервизора.</div></div>
+<div class="item"><div class="head">Как начисляются очки? <svg  class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m6 9 6 6 6-6" /> </svg></div></div>
+</div><span class="cap">expanded (первый пункт)</span></div>
+<div class="spec"><div class="acc">
+<div class="item"><div class="head">Что входит в разбор сессии? <svg  class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m6 9 6 6 6-6" /> </svg></div></div>
+<div class="item"><div class="head">Как начисляются очки? <svg  class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m6 9 6 6 6-6" /> </svg></div></div>
+</div><span class="cap">collapsed</span></div>
+  </div>
+</section>
+
+<!-- ============ TABLE ============ -->
+<section>
+  <h2>Table <span class="tok">сортировка · пагинация · история сессий (E-27)</span></h2>
+  <div class="row">
+    <div class="spec">
+<table class="data">
+<thead><tr><th>ДАТА</th><th>СЦЕНАРИЙ</th><th>БАЛЛ <svg  class="lucide lucide-chevron-up" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m18 15-6-6-6 6" /> </svg></th><th>ДЛИТЕЛЬНОСТЬ</th></tr></thead>
+<tbody>
+<tr><td>12.09.2026</td><td class="name">Работа с сопротивлением</td><td class="score">86</td><td>14 мин</td></tr>
+<tr><td>10.09.2026</td><td class="name">Первичная консультация</td><td class="score">74</td><td>18 мин</td></tr>
+<tr><td>08.09.2026</td><td class="name">Активное слушание</td><td class="score">91</td><td>12 мин</td></tr>
+<tr><td>05.09.2026</td><td class="name">Границы и контракт</td><td class="score">68</td><td>21 мин</td></tr>
+</tbody></table>
+<div class="pager"><svg  class="lucide lucide-chevron-left" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m15 18-6-6 6-6" /> </svg><span class="pg act">1</span><span class="pg">2</span><span class="pg">3</span><span>…</span><span class="pg">12</span><svg  class="lucide lucide-chevron-right" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m9 18 6-6-6-6" /> </svg></div>
+<span class="cap">сортировка по «Балл» · пагинация</span></div>
+  </div>
+</section>
+
+<!-- ============ TOASTS ============ -->
+<section>
+  <h2>Toast / Notification <span class="tok">info · success · warning · error</span></h2>
+  <div class="row" style="flex-direction:column;gap:16px">
+    <div class="toast info"><svg style="margin:4px 0 0 14px" class="lucide lucide-info" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="M12 16v-4" /> <path d="M12 8h.01" /> </svg>
+<div style="flex:1"><b>Инфо</b><span>Сессия сохранена автоматически</span></div>
+<button class="x" aria-label="Закрыть"><svg  class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 6 6 18" /> <path d="m6 6 12 12" /> </svg></button></div>
+<div class="toast success"><svg style="margin:4px 0 0 14px" class="lucide lucide-circle-check" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="m9 12 2 2 4-4" /> </svg>
+<div style="flex:1"><b>Готово</b><span>Сценарий опубликован</span></div>
+<button class="x" aria-label="Закрыть"><svg  class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 6 6 18" /> <path d="m6 6 12 12" /> </svg></button></div>
+<div class="toast warning"><svg style="margin:4px 0 0 14px" class="lucide lucide-triangle-alert" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" /> </svg>
+<div style="flex:1"><b>Внимание</b><span>Сессия не завершена</span></div>
+<button class="x" aria-label="Закрыть"><svg  class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 6 6 18" /> <path d="m6 6 12 12" /> </svg></button></div>
+<div class="toast error"><svg style="margin:4px 0 0 14px" class="lucide lucide-circle-x" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" /> </svg>
+<div style="flex:1"><b>Ошибка</b><span>Не удалось отправить ответ</span></div>
+<button class="x" aria-label="Закрыть"><svg  class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 6 6 18" /> <path d="m6 6 12 12" /> </svg></button></div>
+  </div>
+</section>
+
+<!-- ============ MODAL ============ -->
+<section>
+  <h2>Modal / Dialog <span class="tok">sm 400 · md 560 · lg 720 · full · мобильный = bottom sheet</span></h2>
+  <div class="row">
+    <div class="spec"><div class="modal">
+<button class="x" aria-label="Закрыть"><svg  class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 6 6 18" /> <path d="m6 6 12 12" /> </svg></button>
+<h3>Удалить сценарий?</h3>
+<p>Сценарий «Работа с сопротивлением» будет удалён для всех студентов. Действие необратимо.</p>
+<div class="foot"><button class="btn secondary md">Отмена</button><button class="btn danger md">Удалить</button></div>
+</div><span class="cap">modal md 560 · shadow/lg · Esc = отмена</span></div>
+  </div>
+</section>
+
+<!-- ============ SKELETON ============ -->
+<section>
+  <h2>Skeleton <span class="tok">состояние loading (ТЗ 6.2)</span></h2>
+  <div class="row">
+    <div class="spec"><div class="skl-card">
+<div style="display:flex;gap:12px"><span class="skl" style="width:40px;height:40px;border-radius:50%"></span>
+<div style="flex:1;padding-top:4px"><span class="skl" style="display:block;width:60%;height:10px"></span>
+<span class="skl" style="display:block;width:40%;height:10px;margin-top:8px"></span></div></div>
+<span class="skl" style="display:block;width:100%;height:84px;margin-top:16px;border-radius:8px"></span>
+</div><span class="cap">skeleton card · pulse 1.5s</span></div>
+<div class="spec"><div>
+<span class="skl" style="display:block;width:320px;height:12px"></span>
+<span class="skl" style="display:block;width:260px;height:12px;margin-top:10px"></span>
+<span class="skl" style="display:block;width:300px;height:12px;margin-top:10px"></span>
+</div><span class="cap">skeleton text lines</span></div>
+  </div>
+</section>
+
+<!-- ============ DARK ============ -->
+<section>
+  <h2>Тёмная тема <span class="tok">color/dark/* · обязательна для TMA и клиентских экранов</span></h2>
+  <div class="dark">
+    <h3>Telegram Mini App — тёмная тема</h3>
+    <div class="sub2">bg #0B1220 · поверхности #111827 · текст #F8FAFC / #CBD5E1 · границы #1F2937 · акценты те же</div>
+    <div class="row" style="margin-top:20px">
+      <button class="btn primary md">Продолжить</button>
+      <button class="btn secondary md">Вторичная</button>
+      <button class="btn ghost md">Отмена</button>
+      <div style="width:24px"></div>
+      <input class="inp-d" placeholder="name@example.com">
+      <span class="chip skill md" style="margin-left:12px"><span class="dot" style="background:var(--acc2)"></span>эмпатия</span>
+    </div>
+    <div class="row">
+      <div class="toast success" style="background:#111827;border-color:#1F2937"><span class="cap" hidden></span><svg style="margin:4px 0 0 14px" class="lucide lucide-circle-check" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10" /> <path d="m9 12 2 2 4-4" /> </svg><div><b style="color:#F8FAFC">Готово</b><span>Сценарий опубликован</span></div><button class="x" aria-label="Закрыть"><svg  class="lucide lucide-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 6 6 18" /> <path d="m6 6 12 12" /> </svg></button></div>
+      <div class="note" style="margin-top:0;background:#111827;border-color:#78350F;color:#FDE68A;max-width:460px">TMA safe area: контент ниже header (~56px), MainButton (~80px) не перекрывается, тапы ≥ 44×44.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Platform Design · UI-kit v1.0 · 72 компонента генерируются плагином в Penpot · источник истины: tokens/design-tokens.json
+</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "platform-foundations-builder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Penpot plugin: создаёт цветовые/текстовые стили и борд Foundations из токенов ТЗ",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "esbuild src/plugin.ts --bundle --format=iife --target=es2020 --outfile=dist/plugin.js"
+  },
+  "devDependencies": {
+    "@penpot/plugin-types": "^1.5.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}
