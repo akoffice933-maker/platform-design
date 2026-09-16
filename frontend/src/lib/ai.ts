@@ -12,11 +12,13 @@ const CFG_KEY = 'platform.ai.v1';
 export interface AiConfig { key: string; model: string; judge: boolean; client: boolean }
 
 // Бесплатные модели OpenRouter (live-список сент. 2026, pricing 0/0).
+// По решению пользователя GLM 5.2 и автороутер openrouter/free (водивший к GLM)
+// выведены: дефолт — google/gemma-4-31b-it:free (русский язык, строгий JSON, скорость).
 export const FREE_MODELS = [
-  { id: 'openrouter/free', label: 'openrouter/free · автороутер (рекоменд.)' },
-  { id: 'google/gemma-4-31b-it:free', label: 'Gemma 4 31B · Google' },
+  { id: 'google/gemma-4-31b-it:free', label: 'Gemma 4 31B · Google (рекоменд.)' },
+  { id: 'google/gemma-4-26b-a4b-it:free', label: 'Gemma 4 26B MoE · быстрее' },
   { id: 'nvidia/nemotron-3-super-120b-a12b:free', label: 'Nemotron 3 Super 120B · NVIDIA' },
-  { id: 'z-ai/glm-5.2:free', label: 'GLM 5.2 · Z.ai' },
+  { id: 'nex-agi/nex-n2.5-pro:free', label: 'Nex N2.5 Pro' },
   { id: 'thinkingmachines/inkling:free', label: 'Inkling · Thinking Machines' },
 ];
 
@@ -33,7 +35,12 @@ export class AiError extends Error {
 
 export function aiConfig(): AiConfig {
   if (RUNTIME) return { ...RUNTIME };
-  try { return { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(CFG_KEY) || '{}') as Partial<AiConfig>) }; }
+  try {
+    const c = { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(CFG_KEY) || '{}') as Partial<AiConfig>) };
+    // миграция: выведенные модели (автороутер, GLM) → новый дефолт
+    if (!FREE_MODELS.some((m) => m.id === c.model)) c.model = DEFAULTS.model;
+    return c;
+  }
   catch { return { ...DEFAULTS }; }
 }
 export function setAiConfig(patch: Partial<AiConfig>): void {
