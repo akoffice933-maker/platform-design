@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Design v1.0 · дизайн-система платформы психологической помощи</title>
+<style>
+  :root{--ink:#0F172A;--ink2:#475569;--ink3:#94A3B8;--bd:#E2E8F0;--bg:#F7F8FA;--acc:#2563EB;--acc2:#7C3AED;--ok:#16A34A}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 24px 80px}
+  header.top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#7C3AED);flex:none}
+  header.top b{font-size:17px}
+  header.top .gh{margin-left:auto;font-size:13px}
+  header.top a{color:var(--acc);text-decoration:none;font-weight:600}
+  h1{font-size:34px;line-height:1.2;margin:22px 0 10px}
+  .lead{font-size:15px;color:var(--ink2);max-width:760px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 8px}
+  .chip{border:1px solid var(--bd);background:#fff;border-radius:9999px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--ink2)}
+  .chip.g{background:#F0FDF4;border-color:#BBF7D0;color:#166534}
+  .install{background:#0F172A;color:#E2E8F0;border-radius:14px;padding:22px 24px;margin:26px 0}
+  .install h2{font-size:15px;color:#fff;margin-bottom:6px}
+  .install p{font-size:13px;color:#94A3B8;margin-bottom:12px}
+  .install code{display:block;font-family:ui-monospace,'JetBrains Mono',monospace;font-size:12.5px;background:#1E293B;border-radius:8px;padding:12px 14px;color:#93C5FD;word-break:break-all}
+  .install .steps{font-size:13px;color:#CBD5E1;margin-top:12px}
+  .install .steps b{color:#fff}
+  .sec{margin:34px 0 12px;font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--ink3)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+  .card{display:block;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:18px 20px;text-decoration:none;color:var(--ink);transition:box-shadow .15s,transform .15s}
+  .card:hover{box-shadow:0 8px 24px rgba(15,23,42,.10);transform:translateY(-1px)}
+  .card .n{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--acc)}
+  .card b{display:block;font-size:16px;margin:5px 0 4px}
+  .card span{font-size:13px;color:var(--ink2)}
+  .card .tag{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;color:var(--ink3);border:1px solid var(--bd);border-radius:9999px;padding:3px 10px}
+  footer{margin-top:44px;font-size:12.5px;color:var(--ink3);text-align:center}
+  footer a{color:var(--acc);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <i class="mark"></i><b>Platform Design</b>
+    <span class="gh"><a href="https://github.com/akoffice933-maker/platform-design">Репозиторий на GitHub →</a></span>
+  </header>
+
+  <h1>Дизайн-система платформы психологической помощи</h1>
+  <p class="lead">Обучающе-симуляционная платформа для психологов + терапевтические игры для клиентов.
+  Выполнено по ТЗ v1.0 в экосистеме Penpot: токены (W3C DTCG) → UI-kit → доменные компоненты →
+  145 экранов (E-01…E-85) → 6 кликабельных прототипов → Handoff.</p>
+  <div class="chips">
+    <span class="chip g">✓ Все 10 итераций ТЗ</span>
+    <span class="chip">2 продукта</span><span class="chip">3 контекста</span><span class="chip">6 ролей</span>
+    <span class="chip">WCAG 2.1 AA</span><span class="chip">тёмная тема</span><span class="chip">152-ФЗ</span>
+  </div>
+
+  <div class="install">
+    <h2>Плагин Penpot «Platform Builder» — собирает всю систему в вашем Penpot за один запуск</h2>
+    <p>Манифест (Penpot → Plugins → Plugin manager → вставить URL → Install):</p>
+    <code>https://akoffice933-maker.github.io/platform-design/penpot-plugin/manifest.json</code>
+    <p class="steps"><b>1.</b> Открыть файл проекта и чистую страницу · <b>2.</b> Plugins → Platform Builder → Run ·
+    <b>3.</b> Получить 149 бордов, 106 компонентов, 43 стиля, 6 кликабельных потоков (идемпотентно).</p>
+  </div>
+
+  <div class="sec">ОСНОВАНИЯ</div>
+  <div class="grid">
+    <a class="card" href="foundations/01-foundations.html"><span class="n">01 · FOUNDATIONS</span>
+      <b>Токены и WCAG-аудит</b><span>33 цвета, шкала Inter 40→12, отступы, радиусы, тени, контраст-матрица</span>
+      <span class="tag">tokens / DTCG</span></a>
+    <a class="card" href="uikit/02-components.html"><span class="n">02 · UI-KIT</span>
+      <b>72 компонента со состояниями</b><span>Button ×30, Input, Select, Table, Toast, тёмная тема</span>
+      <span class="tag">интерактивная спека</span></a>
+    <a class="card" href="patterns/03-domain.html"><span class="n">03 · DOMAIN</span>
+      <b>34 доменных компонента</b><span>ScenarioCard, GameCard, радар навыков, CodeDisplay, BottomNav…</span>
+      <span class="tag">паттерны ТЗ 4.2</span></a>
+  </div>
+
+  <div class="sec">ЭКРАНЫ</div>
+  <div class="grid">
+    <a class="card" href="screens/04-auth-dashboard.html"><span class="n">04 · E-01…E-12</span>
+      <b>Auth + дашборды</b><span>Лендинг, демо, вход/регистрация, онбординг, дашборды психолога и студента × 3 бп</span>
+      <span class="tag">33 фрейма</span></a>
+    <a class="card" href="screens/05-simulator.html"><span class="n">05 · E-20…E-28</span>
+      <b>Симулятор сессий</b><span>Библиотека сценариев, сессия с эмоциями, пауза, разбор с радарами, история</span>
+      <span class="tag">27 фреймов</span></a>
+    <a class="card" href="screens/06-games-client.html"><span class="n">06 · E-30…E-44</span>
+      <b>Игры + клиентский сценарий</b><span>Выдача доступа (код/ссылка/QR), клиенты; клиент — тёмная тема, 7 типов шагов</span>
+      <span class="tag">30 фреймов</span></a>
+    <a class="card" href="screens/07-tma.html"><span class="n">07 · E-50…E-57</span>
+      <b>Telegram Mini App</b><span>Онбординг, главная, игры, шаги, результат, дневник, прогресс, профиль; safe area 56/80</span>
+      <span class="tag">390 · dark · 9 фреймов</span></a>
+    <a class="card" href="screens/08-admin-supervision.html"><span class="n">08 · E-60…E-73</span>
+      <b>Админка + супервизия</b><span>Верификация с SLA, аудит 152-ФЗ, разборы с таймкодами, отчёты</span>
+      <span class="tag">1440/1280 · 28 фреймов</span></a>
+    <a class="card" href="screens/09-states-prototypes.html"><span class="n">09 · E-80…E-85</span>
+      <b>Состояния + прототипы</b><span>Loading/empty/error/success/partial/critical + карта 6 кликабельных потоков</span>
+      <span class="tag">18 фреймов</span></a>
+  </div>
+
+  <div class="sec">ПЕРЕДАЧА</div>
+  <div class="grid">
+    <a class="card" href="screens/10-handoff.html"><span class="n">10 · HANDOFF KIT</span>
+      <b>Токены, Tailwind, анимации</b><span>CSS-переменные, tailwind.config, motion 150/250/400/500 мс, changelog ×10, чек-лист приёмки</span>
+      <span class="tag">финал</span></a>
+    <a class="card" href="https://github.com/akoffice933-maker/platform-design/tree/main/docs"><span class="n">DOCS</span>
+      <b>Документация</b><span>Установка Penpot, workflow итераций, чек-листы, материалы юристу (152-ФЗ) и методисту</span>
+      <span class="tag">5 документов</span></a>
+    <a class="card" href="https://github.com/akoffice933-maker/platform-design/tree/main/tokens"><span class="n">TOKENS</span>
+      <b>design-tokens.json</b><span>Источник истины (W3C DTCG) + tokens.css с переменными и Tailwind-маппингом</span>
+      <span class="tag">raw JSON/CSS</span></a>
+  </div>
+
+  <footer>Platform Design v1.0 · генерируется плагином и скриптами из репозитория ·
+  исходники: <a href="https://github.com/akoffice933-maker/platform-design">GitHub</a></footer>
+</div>
+</body>
+</html>
