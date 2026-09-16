@@ -180,7 +180,7 @@ export function buildHandoffBoard(log: string[]): void {
   fin.name = 'final-note';
   ic(f, 'badge-check', M + 16, y + 13, 18, '#16A34A');
   txt(f, M + 44, y + 8, '149 бордов: 3 контента + 145 экранов E-01…E-85 + этот борд · 106 компонентов · 6 прототипов', 12, 600, '#166534');
-  txt(f, M + 44, y + 26, '9 HTML-спек в screens/ · токены в tokens/ · плагин Platform Builder v1.0 (идемпотентен)', 11, 400, '#15803D');
+  txt(f, M + 44, y + 26, '9 HTML-спек в screens/ · токены в tokens/ · плагин Platform Builder v1.1 (идемпотентен)', 11, 400, '#15803D');
 
   try { f.resize(W, y + 44 + M); } catch (_) { /* фиксированная высота */ }
 }

@@ -1,6 +1,6 @@
 {
   "name": "Platform Builder",
-  "description": "Финал ТЗ v1.0 (итерации 1–10): стили (33 цвета + 10 текстов), борды Foundations/UI-kit/Domain (106 компонентов), фреймы E-01…E-85 (145), борд Handoff, 6 кликабельных потоков (createFlow + navigate-to). Итого 149 бордов. Идемпотентен.",
+  "description": "Финал ТЗ v1.0 + самодиагностика (итерации 1–10): стили (33 цвета + 10 текстов), борды Foundations/UI-kit/Domain (106 компонентов), фреймы E-01…E-85 (145), борд Handoff, 6 кликабельных потоков (createFlow + navigate-to). Итого 149 бордов. Идемпотентен.",
   "version": 2,
   "code": "./plugin.js",
   "icon": "./icon.svg",

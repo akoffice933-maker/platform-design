@@ -5868,7 +5868,7 @@
     fin.name = "final-note";
     ic(f, "badge-check", M3 + 16, y + 13, 18, "#16A34A");
     txt(f, M3 + 44, y + 8, "149 \u0431\u043E\u0440\u0434\u043E\u0432: 3 \u043A\u043E\u043D\u0442\u0435\u043D\u0442\u0430 + 145 \u044D\u043A\u0440\u0430\u043D\u043E\u0432 E-01\u2026E-85 + \u044D\u0442\u043E\u0442 \u0431\u043E\u0440\u0434 \xB7 106 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442\u043E\u0432 \xB7 6 \u043F\u0440\u043E\u0442\u043E\u0442\u0438\u043F\u043E\u0432", 12, 600, "#166534");
-    txt(f, M3 + 44, y + 26, "9 HTML-\u0441\u043F\u0435\u043A \u0432 screens/ \xB7 \u0442\u043E\u043A\u0435\u043D\u044B \u0432 tokens/ \xB7 \u043F\u043B\u0430\u0433\u0438\u043D Platform Builder v1.0 (\u0438\u0434\u0435\u043C\u043F\u043E\u0442\u0435\u043D\u0442\u0435\u043D)", 11, 400, "#15803D");
+    txt(f, M3 + 44, y + 26, "9 HTML-\u0441\u043F\u0435\u043A \u0432 screens/ \xB7 \u0442\u043E\u043A\u0435\u043D\u044B \u0432 tokens/ \xB7 \u043F\u043B\u0430\u0433\u0438\u043D Platform Builder v1.1 (\u0438\u0434\u0435\u043C\u043F\u043E\u0442\u0435\u043D\u0442\u0435\u043D)", 11, 400, "#15803D");
     try {
       f.resize(W2, y + 44 + M3);
     } catch (_) {
@@ -5961,6 +5961,59 @@
     } catch (e) {
       problems.push("\xD7 \u043F\u0440\u043E\u0442\u043E\u0442\u0438\u043F\u044B: " + e);
     }
+    try {
+      buildDiagnostics(problems);
+    } catch (_) {
+    }
   }
   main();
+  function buildDiagnostics(problems) {
+    const NAME = "00_Diagnostics / run";
+    try {
+      removeShapesByName(penpot.currentPage, NAME);
+    } catch (_) {
+    }
+    const f = penpot.createBoard();
+    f.name = NAME;
+    f.x = 100;
+    f.y = -560;
+    try {
+      f.resize(1240, 560);
+    } catch (_) {
+    }
+    try {
+      f.fills = [{ fillColor: { r: 1, g: 1, b: 1 }, fillOpacity: 1 }];
+    } catch (_) {
+    }
+    setOrigin(f.x, f.y);
+    rect(f, 0, 0, 1240, 560, "#FFFFFF", 0);
+    txt(f, 24, 26, "\u0414\u0418\u0410\u0413\u041D\u041E\u0421\u0422\u0418\u041A\u0410 \u041F\u0420\u041E\u0413\u041E\u041D\u0410 \xB7 " + (/* @__PURE__ */ new Date()).toISOString().slice(0, 16).replace("T", " ") + " UTC", 14, 700, "#0F172A");
+    txt(f, 24, 50, "\u0411\u043E\u0440\u0434 \u043F\u0435\u0440\u0435\u0441\u043E\u0437\u0434\u0430\u0451\u0442\u0441\u044F \u043F\u0440\u0438 \u043A\u0430\u0436\u0434\u043E\u043C \u0437\u0430\u043F\u0443\u0441\u043A\u0435. \u0421\u0442\u0440\u043E\u043A\u0438 \u0441 \xD7 \u0438\u043B\u0438 \u26A0 \u2014 \u043F\u043E\u0432\u043E\u0434 \u0441\u043E\u043E\u0431\u0449\u0438\u0442\u044C \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0447\u0438\u043A\u0443 \u043F\u043B\u0430\u0433\u0438\u043D\u0430.", 11, 400, "#475569");
+    try {
+      const fr = (penpot.currentPage.findShapes({ name: "E-03 \u0412\u0445\u043E\u0434 / 1440" }) || [])[0];
+      const ch = fr && fr.children || [];
+      const child = ch.find((c) => typeof c.x === "number");
+      if (fr && child) {
+        const diff = Math.round(child.x - fr.x);
+        if (Math.abs(diff) > 300) {
+          problems.push("\u26A0 \u043A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442\u044B: \u043A\u043E\u043D\u0442\u0435\u043D\u0442 \u0441\u043C\u0435\u0449\u0451\u043D \u043D\u0430 " + diff + "px \u2014 Penpot \u0442\u0440\u0430\u043A\u0442\u0443\u0435\u0442 x/y \u043A\u0430\u043A parent-relative. \u0421\u043E\u043E\u0431\u0449\u0438\u0442\u0435 \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0447\u0438\u043A\u0443 (\u0444\u0438\u043A\u0441 \u2014 \u043E\u0434\u043D\u0430 \u0441\u0442\u0440\u043E\u043A\u0430 \u0432 draw.ts).");
+        } else {
+          problems.push("\u2713 \u043A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442\u044B: \u043A\u043E\u043D\u0442\u0435\u043D\u0442 \u0432\u043D\u0443\u0442\u0440\u0438 \u0444\u0440\u0435\u0439\u043C\u043E\u0432 (\u0441\u0434\u0432\u0438\u0433 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u0441\u043B\u043E\u044F " + diff + "px)");
+        }
+      }
+    } catch (_) {
+    }
+    const lines = problems.length ? problems : ["\u2713 \u043E\u0448\u0438\u0431\u043E\u043A \u043D\u0435\u0442: \u0441\u0442\u0438\u043B\u0438, \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442\u044B, \u0444\u0440\u0435\u0439\u043C\u044B \u0438 \u043F\u043E\u0442\u043E\u043A\u0438 \u0441\u043E\u0431\u0440\u0430\u043D\u044B"];
+    lines.slice(0, 19).forEach((ln, i) => {
+      txt(
+        f,
+        24,
+        84 + i * 24,
+        ln,
+        12,
+        400,
+        ln.startsWith("\xD7") || ln.startsWith("\u26A0") ? "#DC2626" : ln.startsWith("\u2713") ? "#16A34A" : "#0F172A"
+      );
+    });
+  }
 })();
