@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { SCENARIO, advance, applyOption, buildResult, isEnd, nodeOf, startRun } from '../lib/engine';
-import type { RunState, SNode, Option } from '../lib/engine';
+import type { RunState, SNode, Option, Emotion } from '../lib/engine';
 import { api } from '../lib/api';
 import { skillLabel } from '../lib/skills';
 import { Btn, Card, Chip, DiffDots, EmotionBar, Textarea } from '../components/ui';
@@ -53,6 +53,9 @@ export default function Session() {
   const total = Object.keys(sc.graph.nodes).length;
   const progress = Math.min(100, Math.round((run.visited.length / total) * 100));
   const skillChips = Object.entries(run.skills).filter(([, v]) => v !== 0).sort((a, b) => b[1] - a[1]);
+  // на реплике/выборе клиент УЖЕ в состоянии emotionAfter узла — показываем его, а не прошлое
+  const talking = node.type === 'text' || node.type === 'choice' || node.type === 'critical';
+  const shownEmotion: Emotion = phase === 'answer' && talking ? (node as { emotionAfter: Emotion }).emotionAfter : run.emotion;
 
   return (
     <div className="p-4 lg:p-6 max-w-6xl mx-auto grid lg:grid-cols-[1fr_320px] gap-6 m-fade-in">
@@ -85,8 +88,13 @@ export default function Session() {
           {(node.type === 'text' || node.type === 'choice' || node.type === 'critical') && phase === 'answer' && (
             <Bubble>
               {(node as { clientLine: string }).clientLine}
-              <div className="mt-1.5 text-caption text-ink-3">Максим · <span className="text-ink-2">{run.emotion.label}</span></div>
+              <div className="mt-1.5 text-caption text-ink-3">Максим · <span className="text-ink-2">{shownEmotion.label}</span></div>
             </Bubble>
+          )}
+
+          {/* реплика-монолог: единственное действие — продолжить */}
+          {node.type === 'text' && phase === 'answer' && (
+            <Btn onClick={() => setRun(advance(run, undefined, sc))}>Продолжить →</Btn>
           )}
 
           {/* card */}
@@ -178,7 +186,7 @@ export default function Session() {
               <span className="text-caption text-ink-3">студент · ИИ-клиент</span>
             </div>
           </div>
-          <EmotionBar value={run.emotion.value} label={run.emotion.label} compact />
+          <EmotionBar value={shownEmotion.value} label={shownEmotion.label} compact />
         </Card>
 
         <Card>
