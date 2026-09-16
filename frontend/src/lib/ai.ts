@@ -33,21 +33,31 @@ export function hasKey(c: AiConfig = aiConfig()): boolean { return c.key.trim().
 async function chat(messages: { role: string; content: string }[], opts?: { temperature?: number; maxTokens?: number }): Promise<string> {
   const c = aiConfig();
   if (!hasKey(c)) throw new Error('нет ключа OpenRouter');
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + c.key.trim(),
-      'Content-Type': 'application/json',
-      'HTTP-Referer': location.origin,
-      'X-Title': 'Platform Design Demo',
-    },
-    body: JSON.stringify({
-      model: c.model,
-      messages,
-      temperature: opts?.temperature ?? 0.2,
-      max_tokens: opts?.maxTokens ?? 400,
-    }),
-  });
+  // :free-модели бывают медленными (live: 3–22 c) и иногда возвращают пустой
+  // content — таймаут 30 c + фолбэк в вызывающем коде, UI не зависает.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30000);
+  let res: Response;
+  try {
+    res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        Authorization: 'Bearer ' + c.key.trim(),
+        'Content-Type': 'application/json',
+        'HTTP-Referer': location.origin,
+        'X-Title': 'Platform Design Demo',
+      },
+      body: JSON.stringify({
+        model: c.model,
+        messages,
+        temperature: opts?.temperature ?? 0.2,
+        max_tokens: opts?.maxTokens ?? 400,
+      }),
+    });
+  } finally {
+    clearTimeout(timer);
+  }
   if (!res.ok) throw new Error('OpenRouter ' + res.status);
   const d = await res.json();
   const text = d?.choices?.[0]?.message?.content;
