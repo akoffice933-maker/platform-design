@@ -4,7 +4,9 @@ import { SCENARIO, advance, applyOption, buildResult, isEnd, nodeOf, startRun } 
 import type { RunState, SNode, Option, Emotion } from '../lib/engine';
 import { api } from '../lib/api';
 import { skillLabel } from '../lib/skills';
-import { Btn, Card, Chip, DiffDots, EmotionBar, Textarea } from '../components/ui';
+import { Btn, Card, Chip, DiffDots, EmotionBar, Input, Textarea } from '../components/ui';
+import { aiConfig, setAiConfig, hasKey, judgeInput, rephraseClientLine, FREE_MODELS } from '../lib/ai';
+import type { AiConfig } from '../lib/ai';
 
 function Bubble({ children, me }: { children: React.ReactNode; me?: boolean }) {
   return (
@@ -25,11 +27,17 @@ export default function Session() {
   const [left, setLeft] = useState(0);
   const [rate, setRate] = useState(4);
   const [free, setFree] = useState('');
+  const [aiCfg, setAiState] = useState<AiConfig>(() => aiConfig());
+  const [judging, setJudging] = useState(false);
+  const [aiLine, setAiLine] = useState<string | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const brief = sc.graph.nodes[sc.graph.start].type === 'card' ? (sc.graph.nodes[sc.graph.start] as { body: string }).body : '';
+  const setAi = (patch: Partial<AiConfig>) => { const c = { ...aiCfg, ...patch }; setAiState(c); setAiConfig(c); };
   const savedRef = useRef(false);
   const node: SNode = nodeOf(run, sc);
   const last = run.steps[run.steps.length - 1];
 
-  const resetLocal = () => { setLeft(0); setRate(4); setFree(''); };
+  const resetLocal = () => { setLeft(0); setRate(4); setFree(''); setAiLine(null); };
   useEffect(resetLocal, [run.nodeId]);
 
   // конец сценария → сохранить разбор и перейти на E-25
@@ -49,6 +57,21 @@ export default function Session() {
     const t = setInterval(() => setLeft((l) => (l > 0 ? l - 1 : 0)), 1000);
     return () => clearInterval(t);
   }, [node]);
+
+  // отправка свободного ответа: с ИИ-судьёй (валидация + фолбэк внутри) или детерминированно
+  const submitInput = async (): Promise<void> => {
+    if (judging) return;
+    const nd = node as Extract<SNode, { type: 'input' }>;
+    const text = free.trim() || '(пропущено)';
+    if (aiCfg.judge && hasKey(aiCfg)) {
+      setJudging(true);
+      const v = await judgeInput({ hints: nd.hints, text, nodeScores: nd.scores, emotionLabel: run.emotion.label });
+      setRun(advance(run, { text, scores: v.scores, feedback: v.feedback, feedbackKind: v.kind }, sc));
+      setJudging(false);
+      return;
+    }
+    setRun(advance(run, { text }, sc));
+  };
 
   const total = Object.keys(sc.graph.nodes).length;
   const progress = Math.min(100, Math.round((run.visited.length / total) * 100));
@@ -89,9 +112,16 @@ export default function Session() {
           {/* реплика клиента текущего/прошедшего узла */}
           {(node.type === 'text' || node.type === 'choice' || node.type === 'critical') && phase === 'answer' && (
             <Bubble>
-              {(node as { clientLine: string }).clientLine}
+              {(node.type === 'text' && aiLine) ? aiLine : (node as { clientLine: string }).clientLine}
               <div className="mt-1.5 text-caption text-ink-3">Максим · <span className="text-ink-2">{shownEmotion.label}</span></div>
             </Bubble>
+          )}
+
+          {node.type === 'text' && phase === 'answer' && hasKey(aiCfg) && aiCfg.client && !aiLine && (
+            <button className="self-start text-caption text-accent underline disabled:opacity-50" disabled={aiBusy}
+              onClick={async () => { setAiBusy(true); try { setAiLine(await rephraseClientLine({ line: (node as { clientLine: string }).clientLine, role: sc.meta.clientRole, brief, emotion: shownEmotion.value + '/10 · ' + shownEmotion.label })); } catch { /* остаётся scripted-реплика */ } setAiBusy(false); }}>
+              {aiBusy ? 'ИИ-клиент печатает…' : '⟳ Вариант реплики от ИИ-клиента'}
+            </button>
           )}
 
           {/* реплика-монолог: единственное действие — продолжить */}
@@ -170,9 +200,10 @@ export default function Session() {
               </div>
               <Textarea value={free} maxLength={node.maxLen} onChange={(e) => setFree(e.target.value)} placeholder="Напишите свой ответ клиенту…" rows={3} />
               <div className="flex items-center gap-3 mt-3">
-                <Btn onClick={() => setRun(advance(run, { text: free }, sc))}>Отправить</Btn>
+                <Btn onClick={submitInput} disabled={judging}>{judging ? 'ИИ-супервизор оценивает…' : 'Отправить'}</Btn>
                 <span className="text-caption text-ink-3">{free.length}/{node.maxLen}</span>
               </div>
+              {judging && <div className="m-skeleton h-12 rounded-lg bg-bg-tertiary mt-3" />}
             </Card>
           )}
         </div>
@@ -213,6 +244,29 @@ export default function Session() {
         </Card>
 
         {isEnd(run, sc) && <Chip tone="ok">сценарий завершён</Chip>}
+
+        <Card>
+          <div className="text-caption uppercase text-ink-3 mb-2">ИИ · OpenRouter (опция)</div>
+          <Input type="password" placeholder="Ключ sk-or-v1-…" value={aiCfg.key} onChange={(e) => setAi({ key: e.target.value })} />
+          <select value={aiCfg.model} onChange={(e) => setAi({ model: e.target.value })} className="pui-input mt-2">
+            {FREE_MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+          </select>
+          <label className="flex items-center gap-2 text-caption text-ink-2 mt-3">
+            <input type="checkbox" checked={aiCfg.judge} onChange={(e) => setAi({ judge: e.target.checked })} className="accent-[#2563EB]" />
+            ИИ-судья свободных ответов
+          </label>
+          <label className="flex items-center gap-2 text-caption text-ink-2 mt-1.5">
+            <input type="checkbox" checked={aiCfg.client} onChange={(e) => setAi({ client: e.target.checked })} className="accent-[#2563EB]" />
+            Варианты реплик ИИ-клиента
+          </label>
+          <p className="text-caption text-ink-3 mt-3 leading-relaxed">
+            Демо: ключ живёт только в вашем браузере и уходит напрямую в openrouter.ai. Бесплатные
+            модели (:free) — с лимитами OpenRouter. Без ключа сессия полностью работает на
+            детерминированных оценках. Прод — серверный прокси:{' '}
+            <a className="text-accent" href="https://github.com/akoffice933-maker/platform-design/blob/main/docs/12-ai-openrouter.md" target="_blank" rel="noreferrer">docs/12</a>.{' '}
+            <a className="text-accent" href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">Получить ключ →</a>
+          </p>
+        </Card>
       </aside>
     </div>
   );

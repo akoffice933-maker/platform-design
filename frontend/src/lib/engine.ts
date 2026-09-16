@@ -141,8 +141,9 @@ export function applyOption(run: RunState, optionId: string, sc: Scenario = SCEN
   return next;
 }
 
-/** Продолжение по автоматическим узлам (card/text/timer/scale/input). */
-export function advance(run: RunState, extra?: { text?: string; selfRate?: number }, sc: Scenario = SCENARIO): RunState {
+/** Продолжение по автоматическим узлам (card/text/timer/scale/input).
+ *  extra.scores/feedback/feedbackKind — переопределение ИИ-судьёй (docs/12). */
+export function advance(run: RunState, extra?: { text?: string; selfRate?: number; scores?: Record<string, number>; feedback?: string; feedbackKind?: 'strength' | 'growth' }, sc: Scenario = SCENARIO): RunState {
   const node = nodeOf(run, sc);
   const next = clone(run);
   switch (node.type) {
@@ -162,12 +163,12 @@ export function advance(run: RunState, extra?: { text?: string; selfRate?: numbe
       pushStep(next, { nodeId: run.nodeId, kind: 'scale', answer: 'Самооценка: ' + (extra?.selfRate ?? node.selfRate) + '/10', emotionAfter: node.emotionAfter });
       break;
     case 'input':
-      addScores(next, node.scores);
+      addScores(next, extra?.scores ?? node.scores);
       next.emotion = { ...node.emotionAfter };
       pushStep(next, {
         nodeId: run.nodeId, kind: 'input', answer: extra?.text || '(пропущено)',
-        feedbackKind: node.feedback?.strength ? 'strength' : 'growth',
-        feedback: node.feedback?.strength ?? node.feedback?.growth,
+        feedbackKind: extra?.feedbackKind ?? (node.feedback?.strength ? 'strength' : 'growth'),
+        feedback: extra?.feedback ?? (node.feedback?.strength ?? node.feedback?.growth),
         emotionAfter: node.emotionAfter,
       });
       break;
