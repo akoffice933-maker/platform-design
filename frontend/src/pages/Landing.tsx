@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Btn, Card, Chip, Logo } from '../components/ui';
 
 const ADV = [
@@ -8,6 +8,7 @@ const ADV = [
 ];
 
 export default function Landing() {
+  const nav = useNavigate();
   return (
     <div className="min-h-screen bg-bg-primary">
       <header className="max-w-6xl mx-auto px-4 lg:px-6 h-16 flex items-center gap-8">
@@ -19,7 +20,7 @@ export default function Landing() {
         </nav>
         <span className="grow" />
         <Link to="/login" className="text-body-sm font-medium text-accent hover:underline">Войти</Link>
-        <Btn size="sm" onClick={() => (window.location.href = '/register')}>Начать</Btn>
+        <Btn size="sm" onClick={() => nav('/register')}>Начать</Btn>
       </header>
 
       <section className="max-w-6xl mx-auto px-4 lg:px-6 pt-14 pb-16 grid lg:grid-cols-2 gap-10 items-center">
@@ -31,7 +32,7 @@ export default function Landing() {
             игры для ваших клиентов — в вебе и Telegram.
           </p>
           <div className="flex gap-3 mt-7" id="demo">
-            <Btn size="lg" onClick={() => (window.location.href = '/app/session/exam-anxiety')}>▶ Попробовать демо-сессию</Btn>
+            <Btn size="lg" onClick={() => nav('/app/session/exam-anxiety')}>▶ Попробовать демо-сессию</Btn>
             <Link to="/login"><Btn size="lg" variant="secondary">Войти в кабинет</Btn></Link>
           </div>
           <p className="text-caption text-ink-3 mt-3">Демо: сценарий «Тревога перед экзаменом» — без регистрации.</p>
