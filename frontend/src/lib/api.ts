@@ -1,7 +1,8 @@
 // Мок-API (docs/08, «API-стаб»): те же сигнатуры, что пойдут на бэкенд.
 // Персист в localStorage — демо живёт без сервера. Замена на fetch(/api/…) —
 // точечно в этом файле, компоненты не меняем.
-import type { SessionResult } from './engine';
+import type { SessionResult, Scenario } from './engine';
+import { SCENARIO } from './engine';
 
 const KEY = 'platform.mock.v1';
 
@@ -12,6 +13,7 @@ export interface DiaryEntry { id: string; date: string; emotion: number; note: s
 export interface CommentRow { id: string; sessionId: string; author: string; text: string; date: string }
 
 interface DB {
+  customScenarios: Scenario[];
   sessions: SessionResult[];
   clients: ClientRow[];
   verifications: Verification[];
@@ -23,6 +25,7 @@ interface DB {
 
 function seed(): DB {
   return {
+    customScenarios: [],
     sessions: [
       {
         id: 's-seed1', scenarioId: 'exam-anxiety', scenarioTitle: 'Тревога перед экзаменом',
@@ -81,7 +84,16 @@ function write(db: DB): void {
   try { localStorage.setItem(KEY, JSON.stringify(db)); } catch { /* приватный режим */ }
 }
 
+export function getScenarioById(id?: string): Scenario | undefined {
+  if (!id || id === SCENARIO.id) return SCENARIO;
+  return read().customScenarios.find((s) => s.id === id);
+}
+
 export const api = {
+  // — сценарии, сгенерированные ИИ/шаблоном —
+  getCustomScenarios(): Scenario[] { return read().customScenarios; },
+  saveCustomScenario(sc: Scenario): void { const db = read(); db.customScenarios = [sc, ...db.customScenarios].slice(0, 20); write(db); },
+  deleteCustomScenario(id: string): void { const db = read(); db.customScenarios = db.customScenarios.filter((s) => s.id !== id); write(db); },
   // — сессии/разборы —
   getSessions(): SessionResult[] { return read().sessions; },
   getSession(id: string): SessionResult | undefined { return read().sessions.find((s) => s.id === id); },

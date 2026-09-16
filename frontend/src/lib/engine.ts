@@ -121,20 +121,21 @@ function goTo(run: RunState, next: string): void {
   }
 }
 
-/** Выбор варианта (choice/critical). Возвращает новый RunState. */
-export function applyOption(run: RunState, optionId: string, sc: Scenario = SCENARIO): RunState {
+/** Выбор варианта (choice/critical). extra — переопределение для свободных
+ *  ответов, оценённых ИИ-судьёй (docs/12): баллы/фидбек/текст ответа. */
+export function applyOption(run: RunState, optionId: string, sc: Scenario = SCENARIO, extra?: { scores?: Record<string, number>; feedback?: string; feedbackKind?: 'strength' | 'growth'; answer?: string }): RunState {
   const node = nodeOf(run, sc);
   if (node.type !== 'choice' && node.type !== 'critical') throw new Error('узел не ждёт optionId: ' + run.nodeId);
   const opt = node.options.find((o) => o.id === optionId);
   if (!opt) throw new Error('нет варианта ' + optionId);
   const next = clone(run);
-  addScores(next, opt.scores);
+  addScores(next, extra?.scores ?? opt.scores);
   next.emotion = { ...opt.emotionAfter };
   next.chosen.push(run.nodeId + '.' + opt.id);
   pushStep(next, {
-    nodeId: run.nodeId, kind: node.type, clientLine: node.clientLine, answer: opt.text,
-    feedbackKind: opt.feedback?.strength ? 'strength' : opt.feedback?.growth ? 'growth' : undefined,
-    feedback: opt.feedback?.strength ?? opt.feedback?.growth,
+    nodeId: run.nodeId, kind: node.type, clientLine: node.clientLine, answer: extra?.answer ?? opt.text,
+    feedbackKind: extra?.feedbackKind ?? (opt.feedback?.strength ? 'strength' : opt.feedback?.growth ? 'growth' : undefined),
+    feedback: extra?.feedback ?? (opt.feedback?.strength ?? opt.feedback?.growth),
     emotionAfter: opt.emotionAfter,
   });
   goTo(next, opt.next);

@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { SCENARIO, advance, applyOption, buildResult, isEnd, nodeOf, remainingSteps, startRun } from '../lib/engine';
 import type { RunState, SNode, Option, Emotion } from '../lib/engine';
-import { api } from '../lib/api';
+import { api, getScenarioById } from '../lib/api';
 import { skillLabel } from '../lib/skills';
 import { Btn, Card, Chip, DiffDots, EmotionBar, Input, Textarea } from '../components/ui';
-import { aiConfig, setAiConfig, hasKey, judgeInput, rephraseClientLine, FREE_MODELS, setRuntimeConfig, testKey } from '../lib/ai';
+import { aiConfig, setAiConfig, hasKey, judgeInput, judgeChoice, fallbackChoice, rephraseClientLine, FREE_MODELS, setRuntimeConfig, testKey } from '../lib/ai';
 import type { AiConfig } from '../lib/ai';
 
 function Bubble({ children, me }: { children: React.ReactNode; me?: boolean }) {
@@ -21,12 +21,13 @@ function Bubble({ children, me }: { children: React.ReactNode; me?: boolean }) {
 export default function Session() {
   const { sid } = useParams();
   const nav = useNavigate();
-  const sc = SCENARIO;
+  const sc = getScenarioById(sid) ?? SCENARIO; // не найден — открываем эталон
   const [run, setRun] = useState<RunState>(() => startRun(sc));
   const [phase, setPhase] = useState<'answer' | 'feedback'>('answer');
   const [left, setLeft] = useState(0);
   const [rate, setRate] = useState(4);
   const [free, setFree] = useState('');
+  const [freeChoice, setFreeChoice] = useState('');
   const [aiCfg, setAiState] = useState<AiConfig>(() => aiConfig());
   const [judging, setJudging] = useState(false);
   const [aiLine, setAiLine] = useState<string | null>(null);
@@ -40,7 +41,7 @@ export default function Session() {
   const node: SNode = nodeOf(run, sc);
   const last = run.steps[run.steps.length - 1];
 
-  const resetLocal = () => { setLeft(0); setRate(4); setFree(''); setAiLine(null); };
+  const resetLocal = () => { setLeft(0); setRate(4); setFree(''); setFreeChoice(''); setAiLine(null); };
   useEffect(resetLocal, [run.nodeId]);
 
   // конец сценария → сохранить разбор и перейти на E-25
@@ -77,6 +78,26 @@ export default function Session() {
       return;
     }
     setRun(advance(run, { text }, sc));
+  };
+
+  // свободный ответ на выбор: ИИ-судья выбирает ближайшую ветку графа и оценивает
+  const submitFreeChoice = async (): Promise<void> => {
+    if (judging) return;
+    const nd = node as Extract<SNode, { type: 'choice' }>;
+    const text = freeChoice.trim();
+    if (text.length < 2) return;
+    setJudging(true);
+    const opts = nd.options.map((o) => ({ id: o.id, text: o.text, scores: o.scores, feedback: o.feedback }));
+    const v = aiCfg.judge && hasKey(aiCfg)
+      ? await judgeChoice({ line: nd.clientLine, options: opts, text, emotionLabel: shownEmotion.label })
+      : fallbackChoice({ line: nd.clientLine, options: opts, text });
+    setLastSource({ source: v.source, model: v.model, ms: v.ms });
+    if (v.note) setAiNote('⚠ ' + v.note);
+    else if (v.source === 'ai') setAiNote('✓ Ответ оценён ИИ · ' + (v.model ?? '') + ' · ветка «' + (nd.options.find((o) => o.id === v.optionId)?.text.slice(0, 34) ?? v.optionId) + '…»');
+    setRun(applyOption(run, v.optionId, sc, { scores: v.scores, feedback: v.feedback, feedbackKind: v.kind, answer: text }));
+    setPhase('feedback');
+    setJudging(false);
+    setFreeChoice('');
   };
 
   // прогресс = пройденные шаги / (пройденные + минимальный остаток до финала) —
@@ -119,12 +140,12 @@ export default function Session() {
           {/* реплика клиента текущего/прошедшего узла */}
           {(node.type === 'text' || node.type === 'choice' || node.type === 'critical') && phase === 'answer' && (
             <Bubble>
-              {(node.type === 'text' && aiLine) ? aiLine : (node as { clientLine: string }).clientLine}
+              {aiLine && (node.type === 'text' || node.type === 'choice') ? aiLine : (node as { clientLine: string }).clientLine}
               <div className="mt-1.5 text-caption text-ink-3">Максим · <span className="text-ink-2">{shownEmotion.label}</span></div>
             </Bubble>
           )}
 
-          {node.type === 'text' && phase === 'answer' && hasKey(aiCfg) && aiCfg.client && !aiLine && (
+          {(node.type === 'text' || node.type === 'choice') && phase === 'answer' && hasKey(aiCfg) && aiCfg.client && !aiLine && (
             <button className="self-start text-caption text-accent underline disabled:opacity-50" disabled={aiBusy}
               onClick={async () => {
                 setAiBusy(true);
@@ -188,6 +209,23 @@ export default function Session() {
                   {o.text}
                 </button>
               ))}
+
+              {/* свободный ответ: ИИ-судья ведёт по ближайшей ветке и оценивает */}
+              <div className="mt-1">
+                <div className="flex items-center gap-2 my-2">
+                  <span className="h-px bg-line grow" />
+                  <span className="text-caption text-ink-3">или ответьте своими словами</span>
+                  <span className="h-px bg-line grow" />
+                </div>
+                <Textarea rows={2} value={freeChoice} maxLength={500} onChange={(e) => setFreeChoice(e.target.value)}
+                  placeholder="Напишите свой ответ клиенту — ИИ подберёт ближайшую ветку сценария и оценит по навыкам…" />
+                <div className="flex items-center gap-3 mt-2">
+                  <Btn size="sm" disabled={judging || freeChoice.trim().length < 2} onClick={submitFreeChoice}>
+                    {judging ? 'ИИ-супервизор оценивает…' : 'Ответить своими словами'}
+                  </Btn>
+                  {judging && <div className="m-skeleton h-8 w-40 rounded-md bg-bg-tertiary" />}
+                </div>
+              </div>
             </div>
           )}
 

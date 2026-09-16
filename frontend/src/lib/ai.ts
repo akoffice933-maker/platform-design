@@ -5,6 +5,8 @@
 // человекочитаемым кодом, есть testKey() для диагностики «в один клик».
 // Прод: тот же контракт через серверный прокси — интерфейс функций не меняется.
 // ============================================================================
+import type { Scenario } from './engine';
+
 const CFG_KEY = 'platform.ai.v1';
 
 export interface AiConfig { key: string; model: string; judge: boolean; client: boolean }
@@ -158,6 +160,95 @@ function fallbackVerdict(p: { hints: string[]; text: string; nodeScores?: Record
     kind: 'growth',
     source: 'fallback',
   };
+}
+
+// --- Судья СВОБОДНОГО ответа на choice-узле: выбирает ближайшую ветку графа ---
+
+export interface ChoiceVerdict {
+  optionId: string; scores: Record<string, number>; feedback: string;
+  kind: 'strength' | 'growth'; source: 'ai' | 'fallback'; model?: string; ms?: number; note?: string;
+}
+
+const words = (s: string) => s.toLowerCase().split(/[^а-яёa-z0-9]+/).filter((w) => w.length >= 4);
+const similar = (a: string, b: string): number => {
+  const wa = words(a); const wb = words(b);
+  if (!wa.length || !wb.length) return 0;
+  let hit = 0;
+  for (const x of wa) if (wb.some((y) => y.slice(0, 3) === x.slice(0, 3))) hit++;
+  return hit / Math.max(wa.length, wb.length);
+};
+
+export function fallbackChoice(p: { line: string; options: { id: string; text: string; scores?: Record<string, number>; feedback?: { strength?: string; growth?: string } }[]; text: string }): ChoiceVerdict {
+  let best = p.options[0]; let bestSim = -1;
+  for (const o of p.options) { const sim = similar(p.text, o.text); if (sim > bestSim) { bestSim = sim; best = o; } }
+  return {
+    optionId: best.id, scores: best.scores ?? {},
+    feedback: 'Свободный ответ ближе всего к варианту «' + best.text.slice(0, 50) + '»' + (bestSim < 0.2 ? ' — но смысл сильно расходится.' : '.'),
+    kind: best.feedback?.strength ? 'strength' : 'growth', source: 'fallback',
+  };
+}
+
+export async function judgeChoice(p: { line: string; options: { id: string; text: string }[]; text: string; emotionLabel?: string }): Promise<ChoiceVerdict> {
+  const c = aiConfig();
+  if (!c.judge || !hasKey(c)) return fallbackChoice(p);
+  try {
+    const r = await chat([
+      {
+        role: 'system',
+        content: 'Ты супервизор-психолог. Стажёр ответил клиенту СВОИМИ СЛОВАМИ (не выбрал готовый вариант). Выбери вариант графа, ближайший по смыслу и технике, и оцени свободный ответ. Верни ТОЛЬКО валидный JSON: {"option": "<id одного из вариантов>", "scores": {"<skillId>": -3…3}, "kind": "strength"|"growth", "feedback": "одно предложение до 90 символов, по-русски, про ответ стажёра"}. Допустимые skillId: listening, empathy, boundaries, structuring, emotion_work, resistance, questioning, reflection. option — только из списка вариантов.',
+      },
+      {
+        role: 'user',
+        content: 'Клиент сказал: «' + p.line + '» (эмоция: ' + (p.emotionLabel ?? '—') + '). Варианты: ' + JSON.stringify(p.options) + '. Свободный ответ стажёра: «' + p.text + '»',
+      },
+    ], { temperature: 0.2, maxTokens: 250 });
+    const j = extractJson(r.text);
+    const optId = String(j.option ?? '');
+    if (!p.options.some((o) => o.id === optId)) throw new AiError('empty', 'модель выбрала несуществующий вариант');
+    const rawScores = (j.scores ?? {}) as Record<string, unknown>;
+    const scores: Record<string, number> = {};
+    for (const [k, v] of Object.entries(rawScores)) if (SKILL_IDS.includes(k)) scores[k] = clamp3(v as number);
+    return {
+      optionId: optId, scores,
+      feedback: String(j.feedback ?? '').slice(0, 140) || 'Ответ принят.',
+      kind: j.kind === 'strength' ? 'strength' : 'growth', source: 'ai', model: r.model, ms: r.ms,
+    };
+  } catch (e) {
+    return { ...fallbackChoice(p), note: (e as Error).message };
+  }
+}
+
+// --- Генератор случайных сценариев (docs/12, фаза 2) ---
+
+export async function generateScenario(p: { topic: string; focus: string[]; difficulty: number }): Promise<{ scenario: Scenario; source: 'ai' | 'template'; note?: string }> {
+  const { validateScenarioJson, templateScenario } = await import('./scenario-gen');
+  const c = aiConfig();
+  if (hasKey(c)) {
+    try {
+      const r = await chat([
+        {
+          role: 'system',
+          content: 'Ты методист обучающей платформы для психологов. Составь НОВЫЙ учебный сценарий симулятора. Верни ТОЛЬКО валидный JSON строго по структуре: {"schemaVersion":"1.0","id":"любой-lowercase","meta":{"title":"3-48 симв","description":"до 120","clientRole":"2-20","difficulty":1-5,"durationMin":5-60,"focusSkills":["из: listening, empathy, boundaries, structuring, emotion_work, resistance, questioning, reflection, максимум 3"],"language":"ru"},"graph":{"start":"<id первого узла>","nodes":{...}}}. Узлы (id: [a-z0-9_]): card{title≤48,body≤200,next}; text{clientLine≤90 (реплика клиента от первого лица), emotionAfter{value 0-10,label≤32}, next}; choice{clientLine,emotionAfter,options[2-5]: {id,text≤64 (реплика психолога),scores{skillId:-3…3},feedback{strength|growth≤90},emotionAfter, next}}; timer{prompt,seconds 5-30,emotionAfter,next}; input{prompt,hints[2-3],maxLen:500,scores,feedback,emotionAfter,next}; scale{prompt,selfRate 0-10,emotionAfter,next}; critical{clientLine,risk:"high",recommendations[3],options как choice}; branch{branches:[{when:{emotionAtLeast:0-10},then}],else}; end{outcome:{summary,debrief,completed:bool}}. Правила: 12-16 узлов; ≥2 choice по 3 варианта; у каждого варианта положительная сумма scores хотя бы у одного варианта choice; ВСЕ next/then/else — существующие id; один branch с emotionAtLeast ведёт в critical (риск: паника/диссоциация/слёзы) и в спокойную ветку; ровно 2 end (completed true и false); option с положительной суммой ведёт к снижению emotionAfter; предупреждение клиенту в card.',
+        },
+        {
+          role: 'user',
+          content: 'Тема/запрос клиента: ' + p.topic + '. Фокус-навыки: ' + (p.focus.join(', ') || 'на твой выбор') + '. Сложность: ' + p.difficulty + ' из 5.',
+        },
+      ], { temperature: 0.6, maxTokens: 3000 });
+      const j = extractJson(r.text);
+      const check = validateScenarioJson(j);
+      if (!check.ok || !check.scenario) {
+        return { scenario: templateScenario(p), source: 'template', note: '⚠ ИИ вернул невалидный граф (' + check.errors.join('; ') + ') — открыт шаблонный. Повторите генерацию.' };
+      }
+      const sc = check.scenario;
+      sc.id = 'gen-' + Date.now().toString(36);
+      if (p.focus.length) sc.meta.focusSkills = p.focus.slice(0, 3);
+      return { scenario: sc, source: 'ai', note: '✓ Сгенерирован ИИ · ' + r.model + ' · ' + Math.round(r.ms / 100) / 10 + ' c' };
+    } catch (e) {
+      return { scenario: templateScenario(p), source: 'template', note: '⚠ ' + (e as Error).message + ' — открыт шаблонный сценарий' };
+    }
+  }
+  return { scenario: templateScenario(p), source: 'template', note: 'Шаблонный сценарий по теме (без ключа). Вставьте ключ OpenRouter — и темы будут генерироваться ИИ.' };
 }
 
 // --- ИИ-вариант реплики клиента (text-узлы): смысл и эмоция неизменны ---
